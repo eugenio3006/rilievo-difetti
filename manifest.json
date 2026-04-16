@@ -1,0 +1,22 @@
+{
+  "name": "Rilievo Difetti",
+  "short_name": "Rilievo",
+  "description": "App per il rilievo difetti stradali",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#f5c518",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

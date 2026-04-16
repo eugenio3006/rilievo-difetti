@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rilievo">
+<meta name="theme-color" content="#f5c518">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>Rilievo Difetti</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
+  --accent: #f5c518; --accentDim: #2e2600;
+  --text: #e8eaf0; --muted: #6b7280;
+  --blue: #3b82f6; --orange: #f97316; --red: #ef4444; --green: #22c55e;
+}
+html, body { height: 100%; background: var(--bg); }
+body { color: var(--text); font-family: 'DM Mono', monospace; }
+.app { max-width: 760px; margin: 0 auto; padding-bottom: 80px; }
+
+.header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 14px 16px; display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.logo { font-size: 26px; color: var(--accent); }
+.title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 2px; color: var(--accent); }
+.subtitle { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+.tabs { display: flex; gap: 5px; }
+.tab {
+  background: transparent; border: 1.5px solid var(--border); color: var(--muted);
+  border-radius: 7px; padding: 9px 14px; font-size: 11px; letter-spacing: 1px;
+  cursor: pointer; font-family: 'DM Mono', monospace;
+}
+.tab.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+
+.form-wrap { padding: 16px 14px; display: flex; flex-direction: column; gap: 18px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 7px; }
+label { font-size: 10px; letter-spacing: 2px; color: var(--muted); font-weight: 500; }
+input, textarea {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 16px; padding: 13px 12px; outline: none; width: 100%;
+}
+textarea { font-size: 14px; resize: vertical; }
+input:focus, textarea:focus { border-color: var(--accent); }
+
+.cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.cat-btn {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+  color: var(--text); padding: 12px 10px; font-size: 12px; cursor: pointer;
+  font-family: 'DM Mono', monospace; text-align: left; line-height: 1.4;
+}
+.cat-btn .cat-num { font-size: 10px; color: var(--muted); display: block; margin-bottom: 2px; letter-spacing: 1px; }
+.cat-btn.active { background: var(--accentDim); border-color: var(--accent); color: var(--accent); }
+
+.section-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); padding: 4px 0 6px; }
+.codice-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
+.codice-item {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+}
+.codice-item .cod { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 44px; }
+.codice-item .desc { font-size: 12px; color: var(--text); line-height: 1.4; }
+.codice-item.active { background: var(--accentDim); border-color: var(--accent); }
+
+.selected-badge {
+  background: var(--accentDim); border: 1.5px solid var(--accent); border-radius: 8px;
+  padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+}
+.selected-badge .cod { font-size: 14px; font-weight: 700; color: var(--accent); }
+.selected-badge .desc { font-size: 11px; color: var(--accent); opacity: 0.8; line-height: 1.3; }
+.badge-change {
+  background: transparent; border: 1px solid var(--accent); color: var(--accent);
+  border-radius: 5px; padding: 4px 9px; font-size: 10px; cursor: pointer;
+  font-family: 'DM Mono', monospace; white-space: nowrap; margin-left: auto; flex-shrink: 0;
+}
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.toggle-btn {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
+  color: var(--muted); padding: 17px; font-size: 15px; letter-spacing: 2px;
+  cursor: pointer; font-family: 'DM Mono', monospace; text-align: center;
+}
+.toggle-btn.active { background: var(--accentDim); border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.chip {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px;
+  color: var(--muted); padding: 13px 4px; font-size: 12px;
+  cursor: pointer; font-family: 'DM Mono', monospace; text-align: center;
+}
+.chip.active { background: var(--accentDim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+
+.btn-save {
+  background: var(--accent); border: none; border-radius: 12px; color: #000;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px;
+  letter-spacing: 3px; padding: 20px; cursor: pointer; width: 100%; margin-top: 4px;
+}
+.btn-save:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+.btn-save.saved { background: var(--green); }
+
+.lista-wrap { padding: 14px; }
+.btn-export {
+  background: var(--green); border: none; border-radius: 10px; color: #000;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px;
+  letter-spacing: 2px; padding: 15px; cursor: pointer; width: 100%; margin-bottom: 10px;
+}
+.btn-clear {
+  background: transparent; border: 1.5px solid var(--red); border-radius: 10px; color: var(--red);
+  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 1px;
+  padding: 11px; cursor: pointer; width: 100%; margin-bottom: 14px;
+}
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 13px; margin-bottom: 9px;
+}
+.card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.card-foto { font-weight: 700; font-size: 14px; flex: 1; }
+.card-codice { background: var(--accentDim); color: var(--accent); border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+.btn-del { background: transparent; border: none; color: var(--red); font-size: 19px; cursor: pointer; padding: 2px 5px; }
+.tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
+.tag { border-radius: 4px; padding: 2px 8px; font-size: 10px; letter-spacing: 1px; }
+.tag-blue { background: #1e3a5f; color: var(--blue); }
+.tag-orange { background: #3a1e00; color: var(--orange); }
+.tag-gray { background: var(--border); color: var(--muted); }
+.card-desc { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.card-note { font-size: 11px; color: var(--muted); margin-top: 3px; font-style: italic; }
+.empty { text-align: center; color: var(--muted); margin-top: 60px; line-height: 2.4; font-size: 14px; }
+.hidden { display: none; }
+
+/* Install banner */
+.install-banner {
+  background: var(--accentDim); border: 1.5px solid var(--accent);
+  border-radius: 10px; margin: 14px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.install-banner .icon { font-size: 22px; }
+.install-banner .text { font-size: 12px; color: var(--accent); line-height: 1.6; flex: 1; }
+.install-banner .close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="header">
+  <div class="header-left">
+    <span class="logo">⬡</span>
+    <div>
+      <div class="title">RILIEVO DIFETTI</div>
+      <div class="subtitle" id="countLabel">0 record salvati</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('form')">INSERIMENTO</button>
+    <button class="tab" onclick="switchTab('lista')">LISTA</button>
+  </div>
+</div>
+
+<!-- Banner installazione -->
+<div class="install-banner" id="installBanner">
+  <span class="icon">⬡</span>
+  <div class="text">Tocca <strong>Condividi ↑</strong> poi <strong>"Aggiungi a schermata Home"</strong> per usarla come app!</div>
+  <button class="close" onclick="document.getElementById('installBanner').classList.add('hidden')">✕</button>
+</div>
+
+<!-- FORM -->
+<div id="viewForm" class="form-wrap">
+  <div class="row2">
+    <div class="field">
+      <label>NOME FOTO</label>
+      <input type="text" id="nomeFoto" placeholder="es. IMG_0042" autocapitalize="none" autocomplete="off" oninput="checkValid()">
+    </div>
+    <div class="field">
+      <label>SVINCOLO</label>
+      <input type="text" id="svincolo" placeholder="es. km 12+400" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>CODICE DIFETTO</label>
+    <div id="badgeCodice" class="hidden selected-badge">
+      <div style="flex:1">
+        <div class="cod" id="badgeCod"></div>
+        <div class="desc" id="badgeDesc"></div>
+      </div>
+      <button class="badge-change" onclick="resetCodice()">cambia</button>
+    </div>
+    <div id="selettoreCodice">
+      <div class="cat-grid" id="catGrid"></div>
+      <div id="codiceListWrap" class="hidden" style="margin-top:10px;">
+        <div class="section-label" id="catLabel"></div>
+        <div class="codice-list" id="codiceList"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>TIPOLOGIA</label>
+    <div class="grid2">
+      <button class="toggle-btn" id="tipPuntuale" onclick="setTipologia('Puntuale')">PUNTUALE</button>
+      <button class="toggle-btn" id="tipDiffuso" onclick="setTipologia('Diffuso')">DIFFUSO</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>CARREGGIATA</label>
+    <div class="grid4" id="gridCarreggiata"></div>
+  </div>
+
+  <div class="field">
+    <label>NOTE</label>
+    <textarea id="note" rows="2" placeholder="Osservazioni aggiuntive..."></textarea>
+  </div>
+
+  <button class="btn-save" id="btnSalva" onclick="salva()" disabled>SALVA RECORD</button>
+</div>
+
+<!-- LISTA -->
+<div id="viewLista" class="hidden lista-wrap">
+  <button class="btn-export" onclick="esportaExcel()">↓ ESPORTA EXCEL</button>
+  <button class="btn-clear" onclick="svuotaTutto()">✕ SVUOTA TUTTO</button>
+  <div id="listaRecords"></div>
+</div>
+
+</div>
+<script>
+// Nasconde il banner se già installata come PWA
+if (window.navigator.standalone) {
+  document.getElementById('installBanner').classList.add('hidden');
+}
+
+const CODICI = {
+  '1': { label: '1 · Pavimentazione', items: [
+    ['1.1','Pavimentazione ammalorata'],['1.2','Buche sulla pavimentazione'],
+    ['1.3','Ormaie'],['1.4','Fessurazioni longitudinali'],
+    ['1.5','Fessurazioni ramificate'],['1.6','Rappezzi'],
+    ['1.7','Accumulo acqua'],['1.8','Apporto materiale sciolto su banchina'],
+    ['1.9','Scorrimenti'],['1.10','Cedimenti del margine'],
+    ['1.11','Perdita di aderenza'],['1.12','Alterazioni piano viabile'],
+    ['1.13','Pavimentazione - Altro']]},
+  '2': { label: '2 · Giunti', items: [
+    ['2.1','Distacco tampone giunto'],
+    ['2.2','Ammaloramento giunti con deformazione/rottura elementi'],
+    ['2.3','Giunti - Altro']]},
+  '3': { label: '3 · Disp. ritenuta', items: [
+    ['3.1','Barriera incidentata'],['3.2','Barriera scoscesa'],
+    ['3.3','Elementi barriera non correttamente installati'],
+    ['3.4','Elementi barriera ossidati'],['3.5','Disallineamento new jersey'],
+    ['3.6','Attenuatore d\'urto incidentato'],['3.7','Dispositivi ritenuta - Altro']]},
+  '4': { label: '4 · Barr. fono/vento', items: [
+    ['4.1','Bar. fonoassorbente elementi danneggiati/assenti'],
+    ['4.2','Bar. frangivento elementi danneggiati/assenti'],
+    ['4.3','Barriere fono/frangivento - Altro']]},
+  '5.1': { label: '5.1 · Segn. verticale', items: [
+    ['5.1.1','Segnaletica verticale vetusta'],['5.1.2','Segnaletica verticale ruotata'],
+    ['5.1.3','Segnaletica verticale inclinata'],
+    ['5.1.4','Affollamento segnaletica verticale'],
+    ['5.1.5','Segnaletica verticale nascosta da vegetazione'],
+    ['5.1.6','Assenza segn. verticale attraversamento pedonale'],
+    ['5.1.7','Segnaletica verticale - Altro']]},
+  '5.2': { label: '5.2 · Segn. orizzontale', items: [
+    ['5.2.1','Segnaletica orizzontale poco visibile'],
+    ['5.2.2','Segn. orizz. attraversamento pedonale poco visibile'],
+    ['5.2.3','Linea arresto arretrata rispetto al margine'],
+    ['5.2.4','Segnaletica orizzontale - Altro']]},
+  '5.3': { label: '5.3 · Segn. complementare', items: [
+    ['5.3.1','Assenza delineatori modulari di curva'],
+    ['5.3.2','Assenza delineatori normali di margine su barriere'],
+    ['5.3.3','Delineatori speciali galleria poco visibili'],
+    ['5.3.4','Delineatori speciali galleria assenti'],
+    ['5.3.5','Segnaletica complementare - Altro']]},
+  '5.4': { label: '5.4 · Segn. luminosa', items: [
+    ['5.4.1','Lanterna semaforica con led non funzionanti'],
+    ['5.4.2','Lanterna semaforica non visibile'],
+    ['5.4.3','Segnaletica luminosa - Altro']]},
+  '5.5': { label: '5.5 · Segn. temporanea', items: [
+    ['5.5.1','Segnale inizio cantiere assente'],['5.5.2','Segnale fine cantiere assente'],
+    ['5.5.3','Segnaletica temporanea incompleta'],
+    ['5.5.4','Segnaletica temporanea orizzontale riaffiorante'],
+    ['5.5.5','Segn. temporanea verticale in assenza di cantiere'],
+    ['5.5.6','Segnaletica temporanea - Altro']]},
+  '6': { label: '6 · Illuminazione/PMV', items: [
+    ['6.1','Impianti illuminazione non funzionanti'],
+    ['6.2','Impianti illuminazione ossidati'],
+    ['6.3','Impianti illuminazione - Altro'],
+    ['6.4','Pannelli a messaggio variabile - Altro']]},
+  '7': { label: '7 · Margini/Scarpate', items: [
+    ['7.1','Scoscendimento arginello'],['7.2','Presenza rifiuti a margine'],
+    ['7.3','Smottamenti dei pendii'],['7.4','Reti paramassi danneggiate'],
+    ['7.5','Reti paramassi piene di detriti alla base'],
+    ['7.6','Margini e scarpate - Altro']]},
+  '8': { label: '8 · Cunette', items: [
+    ['8.1','Presenza di materiale in cunetta'],['8.2','Cunette - Altro']]},
+  '9': { label: '9 · Soccorso', items: [
+    ['9.1','Dispositivi soccorso non funzionanti'],
+    ['9.2','Dispositivi soccorso assenti'],['9.3','Soccorso - Altro']]},
+  '10': { label: '10 · Verde', items: [
+    ['10.1','Vegetazione abbondante'],['10.2','Vegetazione in banchina'],
+    ['10.3','Alberature a margine carreggiata'],
+    ['10.4','Albero alto fusto inclinato verso carreggiata'],
+    ['10.5','Manutenzione del verde - Altro']]},
+  '11.1': { label: '11.1 · Tracciato/Velocità', items: [
+    ['11.1.1','Perdita di tracciato'],['11.1.2','Visibilità intersezione ridotta'],
+    ['11.1.3','Velocità amministrativa non coerente'],
+    ['11.1.4','Tracciato/velocità - Altro']]},
+  '11.2': { label: '11.2 · Sicurezza segn.', items: [
+    ['11.2.1','Uso improprio segnali'],['11.2.2','Ordine errato segn. di indicazione'],
+    ['11.2.3','Uso non corretto striscia margine/separazione corsia'],
+    ['11.2.4','Uso improprio segnaletica complementare'],
+    ['11.2.5','Segn. rotatoria non conforme Direttiva II'],
+    ['11.2.6','Segnaletica sicurezza - Altro']]},
+  '11.3': { label: '11.3 · Sicurezza ritenuta', items: [
+    ['11.3.1','Ostacoli non protetti'],
+    ['11.3.2','Terminali barriera non conformi normative'],
+    ['11.3.3','Mancata transizione tra barriere contigue'],
+    ['11.3.4','Dispositivi ritenuta non adeguati al contesto'],
+    ['11.3.5','Assenza larghezza operativa dispositivo ritenuta'],
+    ['11.3.6','Ritenuta sicurezza - Altro']]},
+  '20': { label: '20 · Scartare', items: [['20','Scartare']]}
+};
+
+const CARREGGIATE = ["Destra","Sinistra","Centrale","Entrambe"];
+let righe = JSON.parse(localStorage.getItem("rilievo_v2") || "[]");
+let selCat = null, selCodice = null, selDesc = null, tipologia = "", carreggiata = "";
+
+function buildCatGrid() {
+  const g = document.getElementById("catGrid");
+  g.innerHTML = "";
+  Object.keys(CODICI).forEach(k => {
+    const b = document.createElement("button");
+    b.className = "cat-btn" + (selCat === k ? " active" : "");
+    b.innerHTML = `<span class="cat-num">${k}</span>${CODICI[k].label.replace(/^[\d.]+ · /,'')}`;
+    b.onclick = () => selectCat(k);
+    g.appendChild(b);
+  });
+}
+
+function selectCat(k) {
+  selCat = k;
+  buildCatGrid();
+  const list = document.getElementById("codiceList");
+  document.getElementById("catLabel").textContent = CODICI[k].label.toUpperCase();
+  list.innerHTML = "";
+  CODICI[k].items.forEach(([cod, desc]) => {
+    const d = document.createElement("div");
+    d.className = "codice-item";
+    d.innerHTML = `<span class="cod">${cod}</span><span class="desc">${desc}</span>`;
+    d.onclick = () => selectCodice(cod, desc);
+    list.appendChild(d);
+  });
+  document.getElementById("codiceListWrap").classList.remove("hidden");
+}
+
+function selectCodice(cod, desc) {
+  selCodice = cod; selDesc = desc;
+  document.getElementById("selettoreCodice").classList.add("hidden");
+  document.getElementById("badgeCodice").classList.remove("hidden");
+  document.getElementById("badgeCod").textContent = cod;
+  document.getElementById("badgeDesc").textContent = desc;
+  checkValid();
+}
+
+function resetCodice() {
+  selCodice = null; selDesc = null;
+  document.getElementById("selettoreCodice").classList.remove("hidden");
+  document.getElementById("badgeCodice").classList.add("hidden");
+  checkValid();
+}
+
+function buildCarreggiata() {
+  const g = document.getElementById("gridCarreggiata");
+  g.innerHTML = "";
+  CARREGGIATE.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "chip" + (carreggiata === c ? " active" : "");
+    b.textContent = c;
+    b.onclick = () => { carreggiata = c; buildCarreggiata(); checkValid(); };
+    g.appendChild(b);
+  });
+}
+
+function setTipologia(t) {
+  tipologia = t;
+  document.getElementById("tipPuntuale").className = "toggle-btn" + (t === "Puntuale" ? " active" : "");
+  document.getElementById("tipDiffuso").className = "toggle-btn" + (t === "Diffuso" ? " active" : "");
+  checkValid();
+}
+
+function checkValid() {
+  const ok = document.getElementById("nomeFoto").value.trim() && selCodice && tipologia && carreggiata;
+  document.getElementById("btnSalva").disabled = !ok;
+}
+
+function salva() {
+  const riga = {
+    id: Date.now(),
+    nomeFoto: document.getElementById("nomeFoto").value.trim(),
+    codiceDifetto: selCodice, descDifetto: selDesc,
+    tipologia, carreggiata,
+    svincolo: document.getElementById("svincolo").value.trim(),
+    note: document.getElementById("note").value.trim()
+  };
+  righe.push(riga);
+  localStorage.setItem("rilievo_v2", JSON.stringify(righe));
+  aggiornaContatore();
+
+  const btn = document.getElementById("btnSalva");
+  btn.textContent = "✓ SALVATO!"; btn.classList.add("saved"); btn.disabled = true;
+  setTimeout(() => { btn.textContent = "SALVA RECORD"; btn.classList.remove("saved"); }, 1300);
+
+  document.getElementById("nomeFoto").value = "";
+  document.getElementById("note").value = "";
+  selCodice = null; selDesc = null; selCat = null; tipologia = "";
+  document.getElementById("tipPuntuale").className = "toggle-btn";
+  document.getElementById("tipDiffuso").className = "toggle-btn";
+  document.getElementById("selettoreCodice").classList.remove("hidden");
+  document.getElementById("badgeCodice").classList.add("hidden");
+  document.getElementById("codiceListWrap").classList.add("hidden");
+  buildCatGrid(); checkValid();
+}
+
+function elimina(id) {
+  righe = righe.filter(r => r.id !== id);
+  localStorage.setItem("rilievo_v2", JSON.stringify(righe));
+  aggiornaContatore(); renderLista();
+}
+
+function svuotaTutto() {
+  if (!confirm("Eliminare tutti i record?")) return;
+  righe = []; localStorage.setItem("rilievo_v2", JSON.stringify(righe));
+  aggiornaContatore(); renderLista();
+}
+
+function aggiornaContatore() {
+  document.getElementById("countLabel").textContent = righe.length + " record salvati";
+}
+
+function renderLista() {
+  const wrap = document.getElementById("listaRecords");
+  if (!righe.length) { wrap.innerHTML = '<div class="empty">Nessun record.<br>Inizia dall\'inserimento →</div>'; return; }
+  wrap.innerHTML = [...righe].reverse().map(r => `
+    <div class="card">
+      <div class="card-top">
+        <span class="card-foto">${r.nomeFoto}</span>
+        <span class="card-codice">${r.codiceDifetto}</span>
+        <button class="btn-del" onclick="elimina(${r.id})">✕</button>
+      </div>
+      <div class="tags">
+        <span class="tag ${r.tipologia==='Puntuale'?'tag-blue':'tag-orange'}">${r.tipologia}</span>
+        <span class="tag tag-gray">${r.carreggiata}</span>
+        ${r.svincolo?`<span class="tag tag-gray">${r.svincolo}</span>`:''}
+      </div>
+      <div class="card-desc">${r.descDifetto||''}</div>
+      ${r.note?`<div class="card-note">${r.note}</div>`:''}
+    </div>`).join("");
+}
+
+function esportaExcel() {
+  if (!righe.length) { alert("Nessun dato da esportare."); return; }
+  const data = righe.map(r => ({
+    "Data": new Date(r.id).toLocaleString("it-IT"),
+    "Nome Foto": r.nomeFoto,
+    "Codice": r.codiceDifetto,
+    "Descrizione difetto": r.descDifetto,
+    "Tipologia": r.tipologia,
+    "Carreggiata": r.carreggiata,
+    "Svincolo": r.svincolo,
+    "Note": r.note
+  }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [16,14,8,40,12,12,14,20].map(w=>({wch:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Rilievo");
+  XLSX.writeFile(wb, `rilievo_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function switchTab(tab) {
+  const isForm = tab === "form";
+  document.getElementById("viewForm").classList.toggle("hidden", !isForm);
+  document.getElementById("viewLista").classList.toggle("hidden", isForm);
+  document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", i===(isForm?0:1)));
+  if (!isForm) renderLista();
+}
+
+// Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+buildCatGrid();
+buildCarreggiata();
+aggiornaContatore();
+</script>
+</body>
+</html>
