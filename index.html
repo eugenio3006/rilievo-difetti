@@ -322,6 +322,13 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
             </div>
           </div>
         </div>
+        <!-- Campo testo per "- Altro" -->
+        <div id="altroWrap" class="hidden" style="margin-top:12px">
+          <div style="background:var(--verde-dim);border:1.5px solid var(--verde);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:12px;color:var(--verde-scuro)">
+            Hai selezionato <strong id="altroCodiceLbl"></strong> — descrivi il difetto:
+          </div>
+          <textarea id="altroTesto" placeholder="Descrizione del difetto..." rows="2" oninput="checkValid()"></textarea>
+        </div>
       </div>
     </div>
 
@@ -690,6 +697,14 @@ function selectCodice(cod,desc){
   document.getElementById("badgeCodice").classList.remove("hidden");
   document.getElementById("badgeCod").textContent=cod;
   document.getElementById("badgeDesc").textContent=desc;
+  // Mostra campo testo se è un codice "- Altro"
+  const isAltro = desc.toLowerCase().endsWith("- altro");
+  document.getElementById("altroWrap").classList.toggle("hidden", !isAltro);
+  if(isAltro){
+    document.getElementById("altroCodiceLbl").textContent=cod+" — "+desc;
+    document.getElementById("altroTesto").value="";
+    setTimeout(()=>document.getElementById("altroTesto").focus(),200);
+  }
   checkValid();
 }
 
@@ -697,6 +712,7 @@ function resetCodice(){
   selCodice=null;selDesc=null;capCorrente=null;
   document.getElementById("selettoreCodice").classList.remove("hidden");
   document.getElementById("badgeCodice").classList.add("hidden");
+  document.getElementById("altroWrap").classList.add("hidden");
   document.getElementById("vistaCapitoli").classList.remove("hidden");
   document.getElementById("vistaDettaglio").classList.add("hidden");
   buildCatGrid();
@@ -726,15 +742,24 @@ function buildNomeFoto(){
   return "IMG_" + num + ".JPG";
 }
 
+function isAltroSelected(){
+  return selDesc && selDesc.toLowerCase().endsWith("- altro");
+}
+
 function checkValid(){
-  const ok=document.getElementById("nomeFoto").value.trim()!=""&&selCodice;
+  const nomeFoto = document.getElementById("nomeFoto").value.trim()!="";
+  const altroOk = !isAltroSelected() || document.getElementById("altroTesto").value.trim()!="";
+  const ok = nomeFoto && selCodice && altroOk;
   document.getElementById("btnSalva").disabled=!ok;
 }
 
 function salva(){
   const riga={id:Date.now(),n:righe.length+1,
     nomeFoto:buildNomeFoto(),
-    codiceDifetto:selCodice,descDifetto:selDesc,
+    codiceDifetto:selCodice,
+    descDifetto:isAltroSelected()
+      ? selDesc+" — "+document.getElementById("altroTesto").value.trim()
+      : selDesc,
     tipologia,carreggiata,
     svincolo:document.getElementById("svincolo").value.trim(),
     note:document.getElementById("note").value.trim()
@@ -754,6 +779,8 @@ function salva(){
   tipologia="";
   document.getElementById("tipP").className="tipo-btn";
   document.getElementById("tipD").className="tipo-btn";
+  document.getElementById("altroTesto").value="";
+  document.getElementById("altroWrap").classList.add("hidden");
   resetCodice();
   checkValid();
   document.querySelector('.content').scrollTo({top:0,behavior:'smooth'});
