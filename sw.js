@@ -1,5 +1,5 @@
-const CACHE = "rilievo-v2";
-const FILES = ["/rilievo-difetti/", "/rilievo-difetti/index.html", "/rilievo-difetti/manifest.json"];
+const CACHE = "rilievo-v3";
+const FILES = ["/rilievo-difetti/", "/rilievo-difetti/index.html", "/rilievo-difetti/manifest.json", "/rilievo-difetti/codici.txt"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
@@ -16,7 +16,14 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
+  // Network-first: prova sempre la rete, fallback sulla cache se offline
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request).catch(() => caches.match("/rilievo-difetti/index.html")))
+    fetch(e.request)
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
