@@ -61,7 +61,7 @@ body{color:var(--testo);font-family:var(--font);font-size:16px;line-height:1.55}
 .content{flex:1;overflow-y:auto;padding-bottom:90px}
 
 /* ── FORM ── */
-.form-wrap{padding:20px 16px;display:flex;flex-direction:column;gap:0}
+.form-wrap{padding:20px 16px;display:flex;flex-direction:column;gap:0;min-height:calc(100vh - 130px)}
 
 /* Sezione card */
 .section-card{background:var(--bianco);border-radius:8px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
@@ -106,7 +106,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
 /* ── CODICE LIST ── */
 .cod-section{margin-top:12px}
 .cod-section-label{font-size:11px;font-weight:700;color:var(--testo2);letter-spacing:1px;text-transform:uppercase;padding:6px 0 8px;border-bottom:2px solid var(--verde-border);margin-bottom:8px}
-.codice-list{display:flex;flex-direction:column;gap:5px;max-height:270px;overflow-y:auto}
+.codice-list{display:flex;flex-direction:column;gap:5px;max-height:calc(100vh - 200px);overflow-y:auto}
 .codice-list::-webkit-scrollbar{width:4px}
 .codice-list::-webkit-scrollbar-thumb{background:var(--verde-border);border-radius:4px}
 .ci{
@@ -117,7 +117,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
 }
 .ci:active{transform:scale(.99)}
 .ci-cod{font-size:18px;font-weight:700;color:var(--verde);min-width:48px;line-height:1}
-.ci-desc{font-size:12px;color:var(--testo);line-height:1.5}
+.ci-desc{font-size:14px;color:var(--testo);line-height:1.5}
 .ci.active{background:var(--verde-dim);border-color:var(--verde)}
 .ci.active .ci-desc{font-weight:600;color:var(--verde-scuro)}
 
@@ -235,6 +235,10 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
 .btn-elimina{background:transparent;border:1.5px solid var(--rosso);color:var(--rosso);border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;padding:9px 14px;font-family:var(--font)}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1C2024;color:#fff;padding:12px 20px;border-radius:30px;font-size:13px;font-weight:600;letter-spacing:.3px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
+.sec-expanded{flex:1;display:flex;flex-direction:column}
+.sec-expanded .section-body{flex:1;display:flex;flex-direction:column}
+.sec-expanded .section-body>div:last-child{flex:1;display:flex;flex-direction:column}
+.sec-expanded .codice-list{flex:1;max-height:none}
 .hidden{display:none!important}
 </style>
 </head>
@@ -292,7 +296,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
     </div>
 
     <!-- 02 Codice Difetto -->
-    <div class="section-card">
+    <div id="sec02" class="section-card">
       <div class="section-header">
         <span class="section-num">02</span>
         <span class="section-title">Codice Difetto <span style="opacity:.7;font-weight:400;font-size:11px">*</span></span>
@@ -333,7 +337,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
     </div>
 
     <!-- 03 Tipologia -->
-    <div class="section-card">
+    <div id="sec03" class="section-card">
       <div class="section-header">
         <span class="section-num">03</span>
         <span class="section-title">Tipologia</span>
@@ -347,7 +351,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
     </div>
 
     <!-- 04 Note -->
-    <div class="section-card">
+    <div id="sec04" class="section-card">
       <div class="section-header">
         <span class="section-num">04</span>
         <span class="section-title">Note aggiuntive</span>
@@ -360,7 +364,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
     </div>
 
     <!-- 05 Carreggiata -->
-    <div class="section-card">
+    <div id="sec05" class="section-card">
       <div class="section-header">
         <span class="section-num">05</span>
         <span class="section-title">Carreggiata</span>
@@ -371,7 +375,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
     </div>
 
     <!-- 06 Svincolo -->
-    <div class="section-card">
+    <div id="sec06" class="section-card">
       <div class="section-header">
         <span class="section-num">06</span>
         <span class="section-title">Svincolo</span>
@@ -634,7 +638,23 @@ function buildCatGrid(){
   });
 }
 
+function setSezioniFocus(nascondi){
+  ["sec03","sec04","sec05","sec06","sec07"].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle("hidden", nascondi);
+  });
+  // Espandi/riduci la sezione difetti
+  const sec02 = document.getElementById("sec02");
+  if(sec02) sec02.classList.toggle("sec-expanded", nascondi);
+}
+
 function selectCapitolo(cap){
+  // Se il capitolo ha un solo difetto con stesso nome, seleziona direttamente
+  if(!cap.sub && cap.items && cap.items.length===1 && cap.items[0][1]===cap.label){
+    selectCodice(cap.items[0][0], cap.items[0][1]);
+    return;
+  }
+  setSezioniFocus(true);
   capCorrente=cap;
   document.getElementById("vistaCapitoli").classList.add("hidden");
   document.getElementById("vistaDettaglio").classList.remove("hidden");
@@ -693,6 +713,7 @@ function mostraDifetti(items){
 
 function selectCodice(cod,desc){
   selCodice=cod;selDesc=desc;
+  setSezioniFocus(false);
   document.getElementById("selettoreCodice").classList.add("hidden");
   document.getElementById("badgeCodice").classList.remove("hidden");
   document.getElementById("badgeCod").textContent=cod;
@@ -710,6 +731,7 @@ function selectCodice(cod,desc){
 
 function resetCodice(){
   selCodice=null;selDesc=null;capCorrente=null;
+  setSezioniFocus(false);
   document.getElementById("selettoreCodice").classList.remove("hidden");
   document.getElementById("badgeCodice").classList.add("hidden");
   document.getElementById("altroWrap").classList.add("hidden");
