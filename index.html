@@ -97,7 +97,7 @@ input::placeholder,textarea::placeholder{color:var(--testo3)}
   border-left:4px solid var(--grigio-bordo);
 }
 .cat-btn .cn{font-size:20px;font-weight:700;color:var(--testo3);display:block;line-height:1;margin-bottom:3px}
-.cat-btn .cl{font-size:11px;color:var(--testo2);line-height:1.4;font-weight:600}
+.cat-btn .cl{font-size:14px;color:var(--testo2);line-height:1.4;font-weight:600}
 .cat-btn.active{background:var(--verde-dim);border-color:var(--verde);border-left-color:var(--verde)}
 .cat-btn.active .cn{color:var(--verde)}
 .cat-btn.active .cl{color:var(--verde-scuro)}
@@ -780,7 +780,7 @@ function salva(){
     nomeFoto:buildNomeFoto(),
     codiceDifetto:selCodice,
     descDifetto:isAltroSelected()
-      ? selDesc+" — "+document.getElementById("altroTesto").value.trim()
+      ? document.getElementById("altroTesto").value.trim()
       : selDesc,
     tipologia,carreggiata,
     svincolo:document.getElementById("svincolo").value.trim(),
