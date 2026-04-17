@@ -4,502 +4,1105 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Rilievo">
-<meta name="theme-color" content="#f5c518">
+<meta name="theme-color" content="#004D33">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon.png">
-<title>Rilievo Difetti</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<title>Rilievo Difetti Stradali</title>
+<link href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-:root {
-  --bg: #0f1117; --surface: #1a1d27; --border: #2a2d3e;
-  --accent: #f5c518; --accentDim: #2e2600;
-  --text: #e8eaf0; --muted: #6b7280;
-  --blue: #3b82f6; --orange: #f97316; --red: #ef4444; --green: #22c55e;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --verde:#004D33;
+  --verde-scuro:#003322;
+  --verde-chiaro:#1a6644;
+  --verde-bg:#f0f7f4;
+  --verde-border:#c8dfd6;
+  --verde-dim:#e8f5f0;
+  --bianco:#FFFFFF;
+  --grigio-bg:#F5F5F5;
+  --grigio-bordo:#C9D9D3;
+  --testo:#1C2024;
+  --testo2:#5A6772;
+  --testo3:#9AABB5;
+  --rosso:#D03C30;
+  --azzurro:#0073BF;
+  --successo:#1E7E34;
+  --font:'Titillium Web',HelveticaNeue-Light,Helvetica Neue Light,Helvetica Neue,Helvetica,Arial,sans-serif;
 }
-html, body { height: 100%; background: var(--bg); }
-body { color: var(--text); font-family: 'DM Mono', monospace; }
-.app { max-width: 760px; margin: 0 auto; padding-bottom: 80px; }
+html,body{height:100%;background:var(--grigio-bg)}
+body{color:var(--testo);font-family:var(--font);font-size:16px;line-height:1.55}
+.app{max-width:768px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--grigio-bg)}
 
-.header {
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 14px 16px; display: flex; align-items: center;
-  justify-content: space-between; flex-wrap: wrap; gap: 8px;
-  position: sticky; top: 0; z-index: 100;
-}
-.header-left { display: flex; align-items: center; gap: 10px; }
-.logo { font-size: 26px; color: var(--accent); }
-.title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px; letter-spacing: 2px; color: var(--accent); }
-.subtitle { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
-.tabs { display: flex; gap: 5px; }
-.tab {
-  background: transparent; border: 1.5px solid var(--border); color: var(--muted);
-  border-radius: 7px; padding: 9px 14px; font-size: 11px; letter-spacing: 1px;
-  cursor: pointer; font-family: 'DM Mono', monospace;
-}
-.tab.active { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 700; }
+/* ── HEADER ISTITUZIONALE ── */
+.header-top{background:var(--verde-scuro);padding:8px 20px;display:flex;align-items:center;gap:12px}
+.header-top .ente{font-size:11px;letter-spacing:.5px;color:rgba(255,255,255,.7);text-transform:uppercase}
+.header-top .sep{color:rgba(255,255,255,.3);font-size:10px}
+.header-main{background:var(--verde);padding:16px 20px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding-bottom:0}
+.brand{display:flex;align-items:center;gap:14px}
+.brand-logo{width:42px;height:42px;background:var(--bianco);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-logo svg{width:26px;height:26px}
+.brand-name{color:var(--bianco)}
+.brand-title{font-size:18px;font-weight:700;line-height:1.1;letter-spacing:.3px}
+.brand-sub{font-size:11px;font-weight:300;opacity:.8;margin-top:2px;letter-spacing:.5px}
+.count-pill{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:6px 14px;font-size:12px;color:rgba(255,255,255,.9);font-weight:600;white-space:nowrap}
+.count-pill span{color:var(--bianco)}
 
-.form-wrap { padding: 16px 14px; display: flex; flex-direction: column; gap: 18px; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field { display: flex; flex-direction: column; gap: 7px; }
-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); font-weight: 500; }
-input, textarea {
-  background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: 8px; color: var(--text); font-family: 'DM Mono', monospace;
-  font-size: 16px; padding: 13px 12px; outline: none; width: 100%;
-}
-textarea { font-size: 14px; resize: vertical; }
-input:focus, textarea:focus { border-color: var(--accent); }
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:768px;background:var(--bianco);border-top:2px solid var(--verde-border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,.08)}
+.nav-tab{flex:1;padding:12px 10px 10px;background:none;border:none;cursor:pointer;font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:.5px;color:var(--testo3);text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:5px;border-top:3px solid transparent;transition:all .2s}
+.nav-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav-tab.active{color:var(--verde);border-top-color:var(--verde)}
 
-.cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.cat-btn {
-  background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
-  color: var(--text); padding: 12px 10px; font-size: 12px; cursor: pointer;
-  font-family: 'DM Mono', monospace; text-align: left; line-height: 1.4;
-}
-.cat-btn .cat-num { font-size: 10px; color: var(--muted); display: block; margin-bottom: 2px; letter-spacing: 1px; }
-.cat-btn.active { background: var(--accentDim); border-color: var(--accent); color: var(--accent); }
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding-bottom:90px}
 
-.section-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); padding: 4px 0 6px; }
-.codice-list { display: flex; flex-direction: column; gap: 6px; max-height: 280px; overflow-y: auto; }
-.codice-item {
-  background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px;
-  padding: 12px 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
-}
-.codice-item .cod { font-size: 13px; font-weight: 700; color: var(--accent); min-width: 44px; }
-.codice-item .desc { font-size: 12px; color: var(--text); line-height: 1.4; }
-.codice-item.active { background: var(--accentDim); border-color: var(--accent); }
+/* ── FORM ── */
+.form-wrap{padding:20px 16px;display:flex;flex-direction:column;gap:0}
 
-.selected-badge {
-  background: var(--accentDim); border: 1.5px solid var(--accent); border-radius: 8px;
-  padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+/* Sezione card */
+.section-card{background:var(--bianco);border-radius:8px;margin-bottom:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.section-header{background:var(--verde);padding:10px 16px;display:flex;align-items:center;gap:10px}
+.section-num{background:rgba(255,255,255,.2);border-radius:4px;padding:2px 8px;font-size:11px;font-weight:700;color:var(--bianco);letter-spacing:1px}
+.section-title{font-size:13px;font-weight:700;color:var(--bianco);letter-spacing:.5px;text-transform:uppercase}
+.section-body{padding:16px}
+
+/* Campi form */
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:13px;font-weight:600;color:var(--testo);letter-spacing:.3px}
+.field .hint{font-size:11px;color:var(--testo2)}
+input,textarea{
+  width:100%;background:var(--bianco);
+  border:2px solid var(--grigio-bordo);
+  border-radius:6px;color:var(--testo);
+  font-family:var(--font);font-size:16px;
+  padding:12px 14px;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+  line-height:1.4;
 }
-.selected-badge .cod { font-size: 14px; font-weight: 700; color: var(--accent); }
-.selected-badge .desc { font-size: 11px; color: var(--accent); opacity: 0.8; line-height: 1.3; }
-.badge-change {
-  background: transparent; border: 1px solid var(--accent); color: var(--accent);
-  border-radius: 5px; padding: 4px 9px; font-size: 10px; cursor: pointer;
-  font-family: 'DM Mono', monospace; white-space: nowrap; margin-left: auto; flex-shrink: 0;
+input:focus,textarea:focus{border-color:var(--verde);box-shadow:0 0 0 3px rgba(0,77,51,.12)}
+textarea{resize:vertical;font-size:15px;min-height:80px}
+input::placeholder,textarea::placeholder{color:var(--testo3)}
+
+/* ── CATEGORIE ── */
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat-btn{
+  background:var(--bianco);border:2px solid var(--grigio-bordo);
+  border-radius:8px;padding:12px 12px;cursor:pointer;text-align:left;
+  font-family:var(--font);transition:all .15s;
+  border-left:4px solid var(--grigio-bordo);
+}
+.cat-btn .cn{font-size:20px;font-weight:700;color:var(--testo3);display:block;line-height:1;margin-bottom:3px}
+.cat-btn .cl{font-size:11px;color:var(--testo2);line-height:1.4;font-weight:600}
+.cat-btn.active{background:var(--verde-dim);border-color:var(--verde);border-left-color:var(--verde)}
+.cat-btn.active .cn{color:var(--verde)}
+.cat-btn.active .cl{color:var(--verde-scuro)}
+.cat-btn:active{transform:scale(.98)}
+
+/* ── CODICE LIST ── */
+.cod-section{margin-top:12px}
+.cod-section-label{font-size:11px;font-weight:700;color:var(--testo2);letter-spacing:1px;text-transform:uppercase;padding:6px 0 8px;border-bottom:2px solid var(--verde-border);margin-bottom:8px}
+.codice-list{display:flex;flex-direction:column;gap:5px;max-height:270px;overflow-y:auto}
+.codice-list::-webkit-scrollbar{width:4px}
+.codice-list::-webkit-scrollbar-thumb{background:var(--verde-border);border-radius:4px}
+.ci{
+  background:var(--bianco);border:1.5px solid var(--grigio-bordo);
+  border-radius:8px;padding:12px 14px;cursor:pointer;
+  display:flex;align-items:center;gap:14px;
+  transition:all .12s;
+}
+.ci:active{transform:scale(.99)}
+.ci-cod{font-size:18px;font-weight:700;color:var(--verde);min-width:48px;line-height:1}
+.ci-desc{font-size:12px;color:var(--testo);line-height:1.5}
+.ci.active{background:var(--verde-dim);border-color:var(--verde)}
+.ci.active .ci-desc{font-weight:600;color:var(--verde-scuro)}
+
+/* ── BADGE SELEZIONATO ── */
+.sel-badge{
+  background:var(--verde-dim);border:2px solid var(--verde);
+  border-radius:8px;padding:14px 16px;
+  display:flex;align-items:center;gap:14px;
+  animation:fi .2s ease;
+}
+@keyframes fi{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.sb-cod{font-size:26px;font-weight:700;color:var(--verde);line-height:1;flex-shrink:0}
+.sb-body{flex:1}
+.sb-desc{font-size:13px;color:var(--testo);line-height:1.4;font-weight:600}
+.sb-change{background:var(--bianco);border:2px solid var(--verde);color:var(--verde);border-radius:6px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;letter-spacing:.3px}
+
+/* ── TIPOLOGIA ── */
+.tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo-btn{
+  background:var(--bianco);border:2px solid var(--grigio-bordo);
+  border-radius:10px;padding:18px 10px;cursor:pointer;
+  font-family:var(--font);font-size:15px;font-weight:700;
+  letter-spacing:.5px;color:var(--testo2);text-align:center;
+  text-transform:uppercase;transition:all .15s;
+}
+.tipo-icon{font-size:26px;display:block;margin-bottom:6px;line-height:1}
+.tipo-btn.active-p{background:#EEF4FF;border-color:var(--azzurro);color:var(--azzurro)}
+.tipo-btn.active-d{background:var(--verde-dim);border-color:var(--verde);color:var(--verde)}
+
+/* ── CARREGGIATA ── */
+.carr-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.carr-btn{
+  background:var(--bianco);border:2px solid var(--grigio-bordo);
+  border-radius:8px;padding:14px 4px;cursor:pointer;
+  font-family:var(--font);font-size:13px;font-weight:600;
+  color:var(--testo2);text-align:center;transition:all .15s;
+}
+.carr-btn.active{background:var(--verde-dim);border-color:var(--verde);color:var(--verde)}
+
+/* ── PULSANTE SALVA ── */
+.btn-salva-wrap{padding:4px 0 8px}
+.btn-salva{
+  width:100%;padding:18px;
+  background:var(--verde);border:none;border-radius:8px;
+  font-family:var(--font);font-size:17px;font-weight:700;
+  letter-spacing:.5px;color:var(--bianco);cursor:pointer;
+  text-transform:uppercase;
+  box-shadow:0 3px 12px rgba(0,77,51,.25);
+  transition:all .15s;
+}
+.btn-salva:active{transform:scale(.99)}
+.btn-salva:disabled{background:var(--testo3);box-shadow:none;cursor:not-allowed}
+.btn-salva.saved{background:var(--successo)}
+
+/* ── LISTA ── */
+.lista-wrap{padding:16px;display:flex;flex-direction:column;gap:10px}
+.lista-azioni{display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:4px}
+.btn-export{
+  background:var(--verde);border:none;border-radius:8px;
+  color:var(--bianco);font-family:var(--font);font-size:15px;font-weight:700;
+  letter-spacing:.3px;padding:14px 18px;cursor:pointer;text-transform:uppercase;
+}
+.btn-reset{
+  background:var(--bianco);border:2px solid var(--rosso);
+  color:var(--rosso);border-radius:8px;padding:14px 16px;
+  font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;
 }
 
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.toggle-btn {
-  background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px;
-  color: var(--muted); padding: 17px; font-size: 15px; letter-spacing: 2px;
-  cursor: pointer; font-family: 'DM Mono', monospace; text-align: center;
-}
-.toggle-btn.active { background: var(--accentDim); border: 2px solid var(--accent); color: var(--accent); font-weight: 700; }
+/* Card lista */
+.card{background:var(--bianco);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.07);margin-bottom:0}
+.card-accent{height:4px}
+.card-accent.p{background:var(--azzurro)}
+.card-accent.d{background:var(--verde)}
+.card-body{padding:14px 16px}
+.card-top{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px}
+.card-n{font-size:28px;font-weight:700;color:var(--verde-border);line-height:1;flex-shrink:0;min-width:38px}
+.card-main{flex:1}
+.card-foto{font-size:15px;font-weight:700;color:var(--testo);margin-bottom:2px}
+.card-cod{font-size:16px;font-weight:700;color:var(--verde)}
+.card-desc{font-size:11px;color:var(--testo2);line-height:1.4;margin-top:1px}
+.btn-del{background:none;border:none;color:var(--testo3);font-size:20px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.tag-p{background:#EEF4FF;color:var(--azzurro);border:1px solid #C0D8F0}
+.tag-d{background:var(--verde-dim);color:var(--verde);border:1px solid var(--verde-border)}
+.tag-g{background:var(--grigio-bg);color:var(--testo2);border:1px solid var(--grigio-bordo)}
+.tag-km{background:#FFF8E8;color:#7A5800;border:1px solid #F0DC9A}
+.card-note{font-size:11px;color:var(--testo2);margin-top:8px;padding-top:8px;border-top:1px solid var(--grigio-bg);font-style:italic;line-height:1.5}
 
-.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
-.chip {
-  background: var(--surface); border: 1.5px solid var(--border); border-radius: 8px;
-  color: var(--muted); padding: 13px 4px; font-size: 12px;
-  cursor: pointer; font-family: 'DM Mono', monospace; text-align: center;
-}
-.chip.active { background: var(--accentDim); border-color: var(--accent); color: var(--accent); font-weight: 700; }
+/* Vuoto */
+.empty{text-align:center;color:var(--testo3);padding:60px 20px;font-size:15px;line-height:2.2}
+.empty-icon{font-size:48px;display:block;margin-bottom:10px;opacity:.4}
 
-.btn-save {
-  background: var(--accent); border: none; border-radius: 12px; color: #000;
-  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 17px;
-  letter-spacing: 3px; padding: 20px; cursor: pointer; width: 100%; margin-top: 4px;
-}
-.btn-save:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
-.btn-save.saved { background: var(--green); }
+/* Banner installazione */
+.inst-banner{background:var(--verde-dim);border-left:4px solid var(--verde);padding:12px 16px;margin:12px 16px 0;border-radius:0 6px 6px 0;display:flex;align-items:center;gap:12px}
+.ib-text{font-size:12px;color:var(--verde-scuro);line-height:1.6;flex:1}
+.ib-text strong{font-weight:700}
+.ib-close{background:none;border:none;color:var(--testo3);font-size:18px;cursor:pointer;flex-shrink:0}
 
-.lista-wrap { padding: 14px; }
-.btn-export {
-  background: var(--green); border: none; border-radius: 10px; color: #000;
-  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px;
-  letter-spacing: 2px; padding: 15px; cursor: pointer; width: 100%; margin-bottom: 10px;
-}
-.btn-clear {
-  background: transparent; border: 1.5px solid var(--red); border-radius: 10px; color: var(--red);
-  font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 1px;
-  padding: 11px; cursor: pointer; width: 100%; margin-bottom: 14px;
-}
-.card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 10px; padding: 13px; margin-bottom: 9px;
-}
-.card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
-.card-foto { font-weight: 700; font-size: 14px; flex: 1; }
-.card-codice { background: var(--accentDim); color: var(--accent); border-radius: 5px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
-.btn-del { background: transparent; border: none; color: var(--red); font-size: 19px; cursor: pointer; padding: 2px 5px; }
-.tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 4px; }
-.tag { border-radius: 4px; padding: 2px 8px; font-size: 10px; letter-spacing: 1px; }
-.tag-blue { background: #1e3a5f; color: var(--blue); }
-.tag-orange { background: #3a1e00; color: var(--orange); }
-.tag-gray { background: var(--border); color: var(--muted); }
-.card-desc { font-size: 11px; color: var(--muted); margin-top: 3px; }
-.card-note { font-size: 11px; color: var(--muted); margin-top: 3px; font-style: italic; }
-.empty { text-align: center; color: var(--muted); margin-top: 60px; line-height: 2.4; font-size: 14px; }
-.hidden { display: none; }
-
-/* Install banner */
-.install-banner {
-  background: var(--accentDim); border: 1.5px solid var(--accent);
-  border-radius: 10px; margin: 14px; padding: 14px 16px;
-  display: flex; align-items: center; gap: 12px;
-}
-.install-banner .icon { font-size: 22px; }
-.install-banner .text { font-size: 12px; color: var(--accent); line-height: 1.6; flex: 1; }
-.install-banner .close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+.divider{height:1px;background:var(--grigio-bg);margin:4px 0}
+.breadcrumb{display:flex;align-items:center;gap:6px;padding:8px 0 10px;flex-wrap:wrap}
+.bc-item{font-size:12px;font-weight:600;color:var(--verde);cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.bc-sep{font-size:12px;color:var(--testo3)}
+.btn-back{display:flex;align-items:center;gap:8px;background:var(--verde-dim);border:1.5px solid var(--verde-border);border-radius:6px;padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--verde);cursor:pointer;margin-bottom:12px;width:100%}
+.btn-back-sub{display:flex;align-items:center;gap:8px;background:transparent;border:none;padding:4px 0 8px;font-family:var(--font);font-size:12px;font-weight:600;color:var(--verde);cursor:pointer}
+.det-title{font-size:13px;font-weight:700;color:var(--verde-scuro);padding:0 0 10px;border-bottom:2px solid var(--verde-border);margin-bottom:10px}
+.det-subtitle{font-size:11px;font-weight:700;color:var(--testo2);letter-spacing:1px;text-transform:uppercase;padding:4px 0 8px;border-bottom:1px solid var(--verde-border);margin-bottom:8px}
+.modale-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modale-box{background:var(--bianco);border-radius:16px 16px 0 0;width:100%;max-width:768px;max-height:85vh;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+.modale-header{background:var(--verde);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;border-radius:16px 16px 0 0}
+.modale-title{font-size:15px;font-weight:700;color:var(--bianco);letter-spacing:.3px}
+.modale-close{background:rgba(255,255,255,.2);border:none;color:var(--bianco);font-size:18px;cursor:pointer;border-radius:6px;padding:4px 10px}
+.modale-body{padding:18px 16px}
+.btn-modifica{background:var(--verde-dim);border:1.5px solid var(--verde);color:var(--verde);border-radius:6px;padding:9px 14px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.3px}
+.btn-elimina{background:transparent;border:1.5px solid var(--rosso);color:var(--rosso);border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;padding:9px 14px;font-family:var(--font)}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1C2024;color:#fff;padding:12px 20px;border-radius:30px;font-size:13px;font-weight:600;letter-spacing:.3px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
 <div class="app">
 
-<div class="header">
-  <div class="header-left">
-    <span class="logo">⬡</span>
-    <div>
-      <div class="title">RILIEVO DIFETTI</div>
-      <div class="subtitle" id="countLabel">0 record salvati</div>
-    </div>
-  </div>
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('form')">INSERIMENTO</button>
-    <button class="tab" onclick="switchTab('lista')">LISTA</button>
-  </div>
-</div>
-
-<!-- Banner installazione -->
-<div class="install-banner" id="installBanner">
-  <span class="icon">⬡</span>
-  <div class="text">Tocca <strong>Condividi ↑</strong> poi <strong>"Aggiungi a schermata Home"</strong> per usarla come app!</div>
-  <button class="close" onclick="document.getElementById('installBanner').classList.add('hidden')">✕</button>
-</div>
-
-<!-- FORM -->
-<div id="viewForm" class="form-wrap">
-  <div class="row2">
-    <div class="field">
-      <label>NOME FOTO</label>
-      <input type="text" id="nomeFoto" placeholder="es. IMG_0042" autocapitalize="none" autocomplete="off" oninput="checkValid()">
-    </div>
-    <div class="field">
-      <label>SVINCOLO</label>
-      <input type="text" id="svincolo" placeholder="es. km 12+400" autocomplete="off">
-    </div>
-  </div>
-
-  <div class="field">
-    <label>CODICE DIFETTO</label>
-    <div id="badgeCodice" class="hidden selected-badge">
-      <div style="flex:1">
-        <div class="cod" id="badgeCod"></div>
-        <div class="desc" id="badgeDesc"></div>
+<!-- HEADER -->
+<div class="header-main">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#004D33" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+        </svg>
       </div>
-      <button class="badge-change" onclick="resetCodice()">cambia</button>
-    </div>
-    <div id="selettoreCodice">
-      <div class="cat-grid" id="catGrid"></div>
-      <div id="codiceListWrap" class="hidden" style="margin-top:10px;">
-        <div class="section-label" id="catLabel"></div>
-        <div class="codice-list" id="codiceList"></div>
+      <div class="brand-name">
+        <div class="brand-title">Rilievo Difetti</div>
+        <div class="brand-sub">Ispezione Infrastrutture Stradali</div>
       </div>
     </div>
+    <div class="count-pill">Record: <span id="countNum">0</span></div>
   </div>
 
-  <div class="field">
-    <label>TIPOLOGIA</label>
-    <div class="grid2">
-      <button class="toggle-btn" id="tipPuntuale" onclick="setTipologia('Puntuale')">PUNTUALE</button>
-      <button class="toggle-btn" id="tipDiffuso" onclick="setTipologia('Diffuso')">DIFFUSO</button>
+
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+  <!-- INSTALL BANNER -->
+  <div class="inst-banner" id="installBanner">
+    <div class="ib-text">💡 Tocca <strong>Condividi ↑</strong> poi <strong>"Aggiungi a schermata Home"</strong> per usare l'app offline.</div>
+    <button class="ib-close" onclick="document.getElementById('installBanner').classList.add('hidden')">✕</button>
+  </div>
+
+  <!-- ═══ FORM ═══ -->
+  <div id="viewForm" class="form-wrap">
+
+        <!-- 01 Nome Foto -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <span class="section-title">Nome Foto <span style="opacity:.7;font-weight:400;font-size:11px">*</span></span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <label for="nomeFoto">Nome foto <span style="color:var(--rosso)">*</span></label>
+          <div style="display:flex;align-items:center;gap:0;background:var(--bianco);border:2px solid var(--grigio-bordo);border-radius:6px;overflow:hidden;transition:border-color .2s" id="nomeFotoWrap">
+            <span style="padding:13px 10px 13px 14px;font-size:16px;color:var(--testo2);background:var(--grigio-bg);border-right:1px solid var(--grigio-bordo);white-space:nowrap;user-select:none">IMG_</span>
+            <input type="number" id="nomeFoto" placeholder="0001" min="0" autocomplete="off" oninput="checkValid()" onfocus="document.getElementById('nomeFotoWrap').style.borderColor='var(--verde)'" onblur="document.getElementById('nomeFotoWrap').style.borderColor='var(--grigio-bordo)'" style="border:none;outline:none;font-size:16px;padding:13px 8px;flex:1;width:100%;background:transparent;color:var(--testo);font-family:var(--font)">
+            <span style="padding:13px 14px 13px 8px;font-size:16px;color:var(--testo2);background:var(--grigio-bg);border-left:1px solid var(--grigio-bordo);white-space:nowrap;user-select:none">.JPG</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 02 Codice Difetto -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <span class="section-title">Codice Difetto <span style="opacity:.7;font-weight:400;font-size:11px">*</span></span>
+      </div>
+      <div class="section-body">
+        <div id="badgeCodice" class="sel-badge hidden">
+          <div class="sb-cod" id="badgeCod"></div>
+          <div class="sb-body"><div class="sb-desc" id="badgeDesc"></div></div>
+          <button class="sb-change" onclick="resetCodice()">Cambia</button>
+        </div>
+        <div id="selettoreCodice">
+          <div id="vistaCapitoli"><div class="cat-grid" id="catGrid"></div></div>
+          <div id="vistaDettaglio" class="hidden">
+            <button class="btn-back" onclick="tornaCapitoli()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+              Tutti i capitoli
+            </button>
+            <div class="det-title" id="detTitle"></div>
+            <div id="vistaSub" class="hidden"><div class="cat-grid" id="subGrid"></div></div>
+            <div id="vistaDifetti" class="hidden">
+              <button class="btn-back-sub hidden" id="btnBackSub" onclick="tornaSub()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                <span id="btnBackSubLabel"></span>
+              </button>
+              <div class="det-subtitle" id="detSubtitle"></div>
+              <div class="codice-list" id="codiceList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 03 Tipologia -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <span class="section-title">Tipologia</span>
+      </div>
+      <div class="section-body">
+        <div class="tipo-grid">
+          <button class="tipo-btn" id="tipP" onclick="setTipologia('Puntuale')"><span class="tipo-icon">◎</span>Puntuale</button>
+          <button class="tipo-btn" id="tipD" onclick="setTipologia('Diffuso')"><span class="tipo-icon">⠿</span>Diffuso</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 04 Note -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <span class="section-title">Note aggiuntive</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <textarea id="note" placeholder="Osservazioni aggiuntive..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- 05 Carreggiata -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <span class="section-title">Carreggiata</span>
+      </div>
+      <div class="section-body">
+        <div class="carr-grid" id="gridCarreggiata"></div>
+      </div>
+    </div>
+
+    <!-- 06 Svincolo -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-num">06</span>
+        <span class="section-title">Svincolo</span>
+      </div>
+      <div class="section-body">
+        <div class="field">
+          <input type="text" id="svincolo" placeholder="es. Svincolo Roma Nord" autocomplete="off">
+        </div>
+      </div>
+    </div>
+
+<!-- SALVA -->
+    <div class="btn-salva-wrap">
+      <button class="btn-salva" id="btnSalva" onclick="salva()" disabled>Salva record</button>
+    </div>
+
+  </div>
+
+  <!-- ═══ LISTA ═══ -->
+  <div id="viewLista" class="lista-wrap hidden">
+    <div class="lista-azioni">
+      <button class="btn-export" onclick="esportaExcel()">↓ Esporta Excel</button>
+      <button class="btn-reset" onclick="svuotaTutto()">✕ Reset</button>
+    </div>
+    <div id="listaRecords"></div>
+  </div>
+
+
+</div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="navForm" onclick="switchTab('form')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+    Inserimento
+  </button>
+  <button class="nav-tab" id="navLista" onclick="switchTab('lista')">
+    <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+    Lista
+  </button>
+
+</nav>
+<div class="toast" id="toast"></div>
+
+<!-- DIALOGO CONFERMA ELIMINA -->
+<div id="dialogoElimina" class="modale-overlay hidden">
+  <div style="background:var(--bianco);border-radius:14px;width:calc(100% - 40px);max-width:400px;overflow:hidden;margin:0 auto">
+    <div style="padding:20px 20px 8px;text-align:center">
+      <div style="font-size:32px;margin-bottom:10px">🗑️</div>
+      <div style="font-size:16px;font-weight:700;color:var(--testo);margin-bottom:6px">Eliminare il record?</div>
+      <div style="font-size:13px;color:var(--testo2)">Questa azione non è reversibile.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--grigio-bg);margin-top:16px">
+      <button onclick="chiudiDialogoElimina()" style="padding:16px;background:none;border:none;border-right:1px solid var(--grigio-bg);font-family:var(--font);font-size:15px;font-weight:600;color:var(--testo2);cursor:pointer">Annulla</button>
+      <button onclick="confermaEliminaOk()" style="padding:16px;background:none;border:none;font-family:var(--font);font-size:15px;font-weight:700;color:var(--rosso);cursor:pointer">Elimina</button>
     </div>
   </div>
+</div>
 
-  <div class="field">
-    <label>CARREGGIATA</label>
-    <div class="grid4" id="gridCarreggiata"></div>
+<!-- MODALE MODIFICA -->
+<div id="modaleModifica" class="modale-overlay hidden" onclick="chiudiModale(event)">
+  <div class="modale-box">
+    <div class="modale-header">
+      <div class="modale-title">Modifica record <span id="modaleN"></span></div>
+      <button class="modale-close" onclick="chiudiModaleBtn()">&#x2715;</button>
+    </div>
+    <div class="modale-body">
+      <div class="field" style="margin-bottom:14px">
+        <label for="modNomeFoto">Nome Foto</label>
+        <input type="text" id="modNomeFoto" autocapitalize="none" autocomplete="off">
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label for="modSvincolo">Svincolo / Progressiva</label>
+        <input type="text" id="modSvincolo" autocomplete="off">
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Codice Difetto</label>
+        <div id="modBadgeCodice" class="sel-badge hidden" style="margin-bottom:8px">
+          <div class="sb-cod" id="modBadgeCod"></div>
+          <div class="sb-desc" id="modBadgeDesc"></div>
+          <button class="sb-change" onclick="modResetCodice()">Cambia</button>
+        </div>
+        <div id="modSelettore">
+          <div id="modVistaCapitoli"><div class="cat-grid" id="modCatGrid"></div></div>
+          <div id="modVistaDettaglio" class="hidden">
+            <button class="btn-back" onclick="modTornaCapitoli()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+              Tutti i capitoli
+            </button>
+            <div class="det-title" id="modDetTitle"></div>
+            <div id="modVistaSub" class="hidden"><div class="cat-grid" id="modSubGrid"></div></div>
+            <div id="modVistaDifetti" class="hidden">
+              <button class="btn-back-sub hidden" id="modBtnBackSub" onclick="modTornaSub()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                <span id="modBtnBackSubLabel"></span>
+              </button>
+              <div class="det-subtitle" id="modDetSubtitle"></div>
+              <div class="codice-list" id="modCodiceList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Tipologia</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="carr-btn" id="modTipP" onclick="setModTipo('Puntuale')">Puntuale</button>
+          <button class="carr-btn" id="modTipD" onclick="setModTipo('Diffuso')">Diffuso</button>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label>Carreggiata</label>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px" id="modCarrGrid"></div>
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label for="modNote">Note</label>
+        <textarea id="modNote" rows="2"></textarea>
+      </div>
+      <button style="background:var(--verde);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:16px;font-weight:700;padding:16px;width:100%;cursor:pointer;letter-spacing:.3px" onclick="salvaModifica()">Salva modifiche</button>
+    </div>
   </div>
-
-  <div class="field">
-    <label>NOTE</label>
-    <textarea id="note" rows="2" placeholder="Osservazioni aggiuntive..."></textarea>
-  </div>
-
-  <button class="btn-save" id="btnSalva" onclick="salva()" disabled>SALVA RECORD</button>
 </div>
 
-<!-- LISTA -->
-<div id="viewLista" class="hidden lista-wrap">
-  <button class="btn-export" onclick="esportaExcel()">↓ ESPORTA EXCEL</button>
-  <button class="btn-clear" onclick="svuotaTutto()">✕ SVUOTA TUTTO</button>
-  <div id="listaRecords"></div>
-</div>
-
-</div>
 <script>
-// Nasconde il banner se già installata come PWA
-if (window.navigator.standalone) {
-  document.getElementById('installBanner').classList.add('hidden');
-}
+if(window.navigator.standalone)document.getElementById('installBanner').classList.add('hidden');
 
-const CODICI = {
-  '1': { label: '1 · Pavimentazione', items: [
+const CAPITOLI_DEFAULT=[
+  {k:'1', label:'Pavimentazione stradale', items:[
     ['1.1','Pavimentazione ammalorata'],['1.2','Buche sulla pavimentazione'],
-    ['1.3','Ormaie'],['1.4','Fessurazioni longitudinali'],
-    ['1.5','Fessurazioni ramificate'],['1.6','Rappezzi'],
-    ['1.7','Accumulo acqua'],['1.8','Apporto materiale sciolto su banchina'],
-    ['1.9','Scorrimenti'],['1.10','Cedimenti del margine'],
-    ['1.11','Perdita di aderenza'],['1.12','Alterazioni piano viabile'],
-    ['1.13','Pavimentazione - Altro']]},
-  '2': { label: '2 · Giunti', items: [
+    ['1.3','Ormaie sulla pavimentazione'],['1.4','Fessurazioni longitudinali sulla pavimentazione'],
+    ['1.5','Fessurazioni ramificate sulla pavimentazione'],['1.6','Rappezzi sulla pavimentazione'],
+    ['1.7','Accumulo di acqua sulla pavimentazione'],['1.8','Apporto materiale sciolto su banchina'],
+    ['1.9','Scorrimenti sulla pavimentazione'],['1.10','Cedimenti del margine'],
+    ['1.11','Perdita di aderenza sulla pavimentazione'],['1.12','Alterazioni del piano viabile'],
+    ['1.13','Pavimentazione stradale - Altro']]},
+  {k:'2', label:'Giunti', items:[
     ['2.1','Distacco tampone giunto'],
-    ['2.2','Ammaloramento giunti con deformazione/rottura elementi'],
+    ['2.2','Ammaloramento giunti con deformazione/rottura degli elementi di continuità'],
     ['2.3','Giunti - Altro']]},
-  '3': { label: '3 · Disp. ritenuta', items: [
+  {k:'3', label:'Dispositivi di ritenuta', items:[
     ['3.1','Barriera incidentata'],['3.2','Barriera scoscesa'],
-    ['3.3','Elementi barriera non correttamente installati'],
-    ['3.4','Elementi barriera ossidati'],['3.5','Disallineamento new jersey'],
-    ['3.6','Attenuatore d\'urto incidentato'],['3.7','Dispositivi ritenuta - Altro']]},
-  '4': { label: '4 · Barr. fono/vento', items: [
-    ['4.1','Bar. fonoassorbente elementi danneggiati/assenti'],
-    ['4.2','Bar. frangivento elementi danneggiati/assenti'],
-    ['4.3','Barriere fono/frangivento - Altro']]},
-  '5.1': { label: '5.1 · Segn. verticale', items: [
-    ['5.1.1','Segnaletica verticale vetusta'],['5.1.2','Segnaletica verticale ruotata'],
-    ['5.1.3','Segnaletica verticale inclinata'],
-    ['5.1.4','Affollamento segnaletica verticale'],
-    ['5.1.5','Segnaletica verticale nascosta da vegetazione'],
-    ['5.1.6','Assenza segn. verticale attraversamento pedonale'],
-    ['5.1.7','Segnaletica verticale - Altro']]},
-  '5.2': { label: '5.2 · Segn. orizzontale', items: [
-    ['5.2.1','Segnaletica orizzontale poco visibile'],
-    ['5.2.2','Segn. orizz. attraversamento pedonale poco visibile'],
-    ['5.2.3','Linea arresto arretrata rispetto al margine'],
-    ['5.2.4','Segnaletica orizzontale - Altro']]},
-  '5.3': { label: '5.3 · Segn. complementare', items: [
-    ['5.3.1','Assenza delineatori modulari di curva'],
-    ['5.3.2','Assenza delineatori normali di margine su barriere'],
-    ['5.3.3','Delineatori speciali galleria poco visibili'],
-    ['5.3.4','Delineatori speciali galleria assenti'],
-    ['5.3.5','Segnaletica complementare - Altro']]},
-  '5.4': { label: '5.4 · Segn. luminosa', items: [
-    ['5.4.1','Lanterna semaforica con led non funzionanti'],
-    ['5.4.2','Lanterna semaforica non visibile'],
-    ['5.4.3','Segnaletica luminosa - Altro']]},
-  '5.5': { label: '5.5 · Segn. temporanea', items: [
-    ['5.5.1','Segnale inizio cantiere assente'],['5.5.2','Segnale fine cantiere assente'],
-    ['5.5.3','Segnaletica temporanea incompleta'],
-    ['5.5.4','Segnaletica temporanea orizzontale riaffiorante'],
-    ['5.5.5','Segn. temporanea verticale in assenza di cantiere'],
-    ['5.5.6','Segnaletica temporanea - Altro']]},
-  '6': { label: '6 · Illuminazione/PMV', items: [
-    ['6.1','Impianti illuminazione non funzionanti'],
-    ['6.2','Impianti illuminazione ossidati'],
-    ['6.3','Impianti illuminazione - Altro'],
-    ['6.4','Pannelli a messaggio variabile - Altro']]},
-  '7': { label: '7 · Margini/Scarpate', items: [
-    ['7.1','Scoscendimento arginello'],['7.2','Presenza rifiuti a margine'],
+    ['3.3','Elementi della barriera non correttamente installati'],
+    ['3.4','Elementi della barriera ossidati'],['3.5','Disallineamento dei new jersey'],
+    ['3.6','Attenuatore d&apos;urto incidentato'],['3.7','Dispositivi di ritenuta - Altro']]},
+  {k:'4', label:'Barriere fonoassorbenti e/o frangivento', items:[
+    ['4.1','Barriera fonoassorbente con elementi danneggiati o assenti'],
+    ['4.2','Barriera frangivento con elementi danneggiati o assenti'],
+    ['4.3','Barriere fonoassorbenti e/o frangivento - Altro']]},
+  {k:'5', label:'Segnaletica stradale', sub:[
+    {k:'5.1', label:'Segnaletica verticale', items:[
+      ['5.1.1','Segnaletica verticale vetusta'],['5.1.2','Segnaletica verticale ruotata'],
+      ['5.1.3','Segnaletica verticale inclinata'],
+      ['5.1.4','Affollamento di segnaletica verticale - mancato rispetto della distanza tra un impianto e il successivo'],
+      ['5.1.5','Segnaletica verticale nascosta da vegetazione'],
+      ['5.1.6','Assenza della segnaletica verticale di attraversamento pedonale'],
+      ['5.1.7','Segnaletica verticale - Altro']]},
+    {k:'5.2', label:'Segnaletica orizzontale', items:[
+      ['5.2.1','Segnaletica orizzontale poco visibile'],
+      ['5.2.2','Segnaletica orizzontale di attraversamento pedonale poco visibile'],
+      ['5.2.3','Linea di arresto arretrata rispetto al margine della carreggiata'],
+      ['5.2.4','Segnaletica orizzontale - Altro']]},
+    {k:'5.3', label:'Segnaletica complementare', items:[
+      ['5.3.1','Assenza di tre delineatori modulari di curva nel cono visivo del conducente'],
+      ['5.3.2','Assenza di delineatori normali di margine sulle barriere'],
+      ['5.3.3','Delineatori speciali di galleria poco visibili'],
+      ['5.3.4','Delineatori speciali di galleria assenti'],
+      ['5.3.5','Segnaletica complementare - Altro']]},
+    {k:'5.4', label:'Segnaletica luminosa', items:[
+      ['5.4.1','Lanterna semaforica con led non funzionanti'],
+      ['5.4.2','Lanterna semaforica non visibile'],
+      ['5.4.3','Segnaletica luminosa - Altro']]},
+    {k:'5.5', label:'Segnaletica temporanea', items:[
+      ['5.5.1','Segnale di inizio cantiere assente'],['5.5.2','Segnale di fine cantiere assente'],
+      ['5.5.3','Segnaletica temporanea incompleta'],
+      ['5.5.4','Segnaletica temporanea orizzontale riaffiorante'],
+      ['5.5.5','Segnaletica temporanea verticale in assenza di cantiere'],
+      ['5.5.6','Segnaletica temporanea - Altro']]}
+  ]},
+  {k:'6', label:'Impianti di illuminazione e pannelli a messaggio variabile', sub:[
+    {k:'6.1', label:'Impianti di illuminazione', items:[
+      ['6.1','Impianti di illuminazione non funzionanti'],
+      ['6.2','Impianti di illuminazione ossidati'],
+      ['6.3','Impianti di illuminazione - Altro']]},
+    {k:'6.2', label:'Pannelli a messaggio variabile', items:[
+      ['6.4','Pannelli a messaggio variabile - Altro']]}
+  ]},
+  {k:'7', label:'Margini e scarpate', items:[
+    ['7.1','Scoscendimento dell’arginello'],
+    ['7.2','Presenza di rifiuti a margine della carreggiata'],
     ['7.3','Smottamenti dei pendii'],['7.4','Reti paramassi danneggiate'],
     ['7.5','Reti paramassi piene di detriti alla base'],
     ['7.6','Margini e scarpate - Altro']]},
-  '8': { label: '8 · Cunette', items: [
+  {k:'8', label:'Cunette', items:[
     ['8.1','Presenza di materiale in cunetta'],['8.2','Cunette - Altro']]},
-  '9': { label: '9 · Soccorso', items: [
-    ['9.1','Dispositivi soccorso non funzionanti'],
-    ['9.2','Dispositivi soccorso assenti'],['9.3','Soccorso - Altro']]},
-  '10': { label: '10 · Verde', items: [
+  {k:'9', label:'Dispositivi di chiamata di soccorso e assistenza', items:[
+    ['9.1','Dispositivi di chiamata di soccorso e assistenza non funzionanti'],
+    ['9.2','Dispositivi di chiamata di soccorso e assistenza assenti'],
+    ['9.3','Dispositivi di chiamata di soccorso e assistenza - Altro']]},
+  {k:'10', label:'Manutenzione del verde', items:[
     ['10.1','Vegetazione abbondante'],['10.2','Vegetazione in banchina'],
-    ['10.3','Alberature a margine carreggiata'],
-    ['10.4','Albero alto fusto inclinato verso carreggiata'],
+    ['10.3','Alberature a margine della carreggiata'],
+    ['10.4','Albero ad alto fusto inclinato verso la carreggiata'],
     ['10.5','Manutenzione del verde - Altro']]},
-  '11.1': { label: '11.1 · Tracciato/Velocità', items: [
-    ['11.1.1','Perdita di tracciato'],['11.1.2','Visibilità intersezione ridotta'],
-    ['11.1.3','Velocità amministrativa non coerente'],
-    ['11.1.4','Tracciato/velocità - Altro']]},
-  '11.2': { label: '11.2 · Sicurezza segn.', items: [
-    ['11.2.1','Uso improprio segnali'],['11.2.2','Ordine errato segn. di indicazione'],
-    ['11.2.3','Uso non corretto striscia margine/separazione corsia'],
-    ['11.2.4','Uso improprio segnaletica complementare'],
-    ['11.2.5','Segn. rotatoria non conforme Direttiva II'],
-    ['11.2.6','Segnaletica sicurezza - Altro']]},
-  '11.3': { label: '11.3 · Sicurezza ritenuta', items: [
-    ['11.3.1','Ostacoli non protetti'],
-    ['11.3.2','Terminali barriera non conformi normative'],
-    ['11.3.3','Mancata transizione tra barriere contigue'],
-    ['11.3.4','Dispositivi ritenuta non adeguati al contesto'],
-    ['11.3.5','Assenza larghezza operativa dispositivo ritenuta'],
-    ['11.3.6','Ritenuta sicurezza - Altro']]},
-  '20': { label: '20 · Scartare', items: [['20','Scartare']]}
-};
+  {k:'11', label:'Sicurezza intrinseca', sub:[
+    {k:'11.1', label:'Tracciato e limiti di velocità', items:[
+      ['11.1.1','Perdita di tracciato'],['11.1.2','Visibilità intersezione ridotta'],
+      ['11.1.3','Velocità amministrativa non coerente con il contesto'],
+      ['11.1.4','Tracciato e limiti di velocità - Altro']]},
+    {k:'11.2', label:'Segnaletica (Sicurezza intrinseca)', items:[
+      ['11.2.1','Uso improprio segnali'],
+      ['11.2.2','Ordine errato della segnaletica di indicazione'],
+      ['11.2.3','Uso non corretto della tipologia di striscia di margine/separazione di corsia'],
+      ['11.2.4','Uso improprio segnaletica complementare'],
+      ['11.2.5','Segnaletica di rotatoria non conforme alla Direttiva II della segnaletica stradale'],
+      ['11.2.6','Segnaletica (Sicurezza intrinseca) - Altro']]},
+    {k:'11.3', label:'Dispositivi di ritenuta (Sicurezza intrinseca)', items:[
+      ['11.3.1','Ostacoli non protetti'],
+      ['11.3.2','Terminali barriera non conformi alle attuali normative'],
+      ['11.3.3','Mancata transizione tra barriere contigue'],
+      ['11.3.4','Dispositivi di ritenuta non adeguati al contesto'],
+      ['11.3.5','Assenza di larghezza operativa del dispositivo di ritenuta'],
+      ['11.3.6','Dispositivi di ritenuta (Sicurezza intrinseca) - Altro']]}
+  ]},
+  {k:'20', label:'Scartare', items:[['20','Scartare']]}
+];
+let CAPITOLI=[...CAPITOLI_DEFAULT];
 
-const CARREGGIATE = ["Destra","Sinistra","Centrale","Entrambe"];
-let righe = JSON.parse(localStorage.getItem("rilievo_v2") || "[]");
-let selCat = null, selCodice = null, selDesc = null, tipologia = "", carreggiata = "";
+// Carica catalogo da codici.txt se disponibile su GitHub
+async function caricaCatalogoRemoto(){
+  try {
+    const res = await fetch('codici.txt?v=' + Date.now());
+    if(!res.ok) return;
+    const testo = await res.text();
+    const nuovi = parseCodiciTxt(testo);
+    if(nuovi && nuovi.length > 0){
+      CAPITOLI.length = 0;
+      nuovi.forEach(c => CAPITOLI.push(c));
+      buildCatGrid();
+    }
+  } catch(e) {
+    // File non trovato o errore — usa catalogo predefinito
+  }
+}
 
-function buildCatGrid() {
-  const g = document.getElementById("catGrid");
-  g.innerHTML = "";
-  Object.keys(CODICI).forEach(k => {
-    const b = document.createElement("button");
-    b.className = "cat-btn" + (selCat === k ? " active" : "");
-    b.innerHTML = `<span class="cat-num">${k}</span>${CODICI[k].label.replace(/^[\d.]+ · /,'')}`;
-    b.onclick = () => selectCat(k);
+
+
+const CARREGGIATE=["Nord","Sud","Est","Ovest"];
+let righe=JSON.parse(localStorage.getItem("rilievo_pa")||"[]");
+let selCodice=null,selDesc=null,tipologia="",carreggiata="";
+let capCorrente=null;
+
+function buildCatGrid(){
+  const g=document.getElementById("catGrid");
+  g.innerHTML="";
+  CAPITOLI.forEach(cap=>{
+    const b=document.createElement("button");
+    b.className="cat-btn";
+    b.innerHTML=`<span class="cn">${cap.k}</span><span class="cl">${cap.label}</span>`;
+    b.onclick=()=>selectCapitolo(cap);
     g.appendChild(b);
   });
 }
 
-function selectCat(k) {
-  selCat = k;
-  buildCatGrid();
-  const list = document.getElementById("codiceList");
-  document.getElementById("catLabel").textContent = CODICI[k].label.toUpperCase();
-  list.innerHTML = "";
-  CODICI[k].items.forEach(([cod, desc]) => {
-    const d = document.createElement("div");
-    d.className = "codice-item";
-    d.innerHTML = `<span class="cod">${cod}</span><span class="desc">${desc}</span>`;
-    d.onclick = () => selectCodice(cod, desc);
+function selectCapitolo(cap){
+  capCorrente=cap;
+  document.getElementById("vistaCapitoli").classList.add("hidden");
+  document.getElementById("vistaDettaglio").classList.remove("hidden");
+  document.getElementById("detTitle").textContent=cap.k+" — "+cap.label;
+  if(cap.sub){
+    document.getElementById("vistaSub").classList.remove("hidden");
+    document.getElementById("vistaDifetti").classList.add("hidden");
+    const sg=document.getElementById("subGrid");
+    sg.innerHTML="";
+    cap.sub.forEach(sub=>{
+      const b=document.createElement("button");
+      b.className="cat-btn";
+      b.innerHTML=`<span class="cn">${sub.k}</span><span class="cl">${sub.label}</span>`;
+      b.onclick=()=>selectSottocapitolo(sub);
+      sg.appendChild(b);
+    });
+  } else {
+    document.getElementById("vistaSub").classList.add("hidden");
+    document.getElementById("btnBackSub").classList.add("hidden");
+    document.getElementById("detSubtitle").textContent="";
+    mostraDifetti(cap.items);
+  }
+  setTimeout(()=>document.getElementById("vistaDettaglio").scrollIntoView({behavior:'smooth',block:'nearest'}),50);
+}
+
+function selectSottocapitolo(sub){
+  document.getElementById("vistaSub").classList.add("hidden");
+  document.getElementById("btnBackSub").classList.remove("hidden");
+  document.getElementById("btnBackSubLabel").textContent=capCorrente.label;
+  document.getElementById("detSubtitle").textContent=sub.k+" — "+sub.label;
+  mostraDifetti(sub.items);
+}
+
+function tornaSub(){
+  selectCapitolo(capCorrente);
+}
+
+function tornaCapitoli(){
+  capCorrente=null;
+  document.getElementById("vistaCapitoli").classList.remove("hidden");
+  document.getElementById("vistaDettaglio").classList.add("hidden");
+}
+
+function mostraDifetti(items){
+  document.getElementById("vistaDifetti").classList.remove("hidden");
+  const list=document.getElementById("codiceList");
+  list.innerHTML="";
+  items.forEach(([cod,desc])=>{
+    const d=document.createElement("div");
+    d.className="ci";
+    d.innerHTML=`<span class="ci-cod">${cod}</span><span class="ci-desc">${desc}</span>`;
+    d.onclick=()=>selectCodice(cod,desc);
     list.appendChild(d);
   });
-  document.getElementById("codiceListWrap").classList.remove("hidden");
 }
 
-function selectCodice(cod, desc) {
-  selCodice = cod; selDesc = desc;
+function selectCodice(cod,desc){
+  selCodice=cod;selDesc=desc;
   document.getElementById("selettoreCodice").classList.add("hidden");
   document.getElementById("badgeCodice").classList.remove("hidden");
-  document.getElementById("badgeCod").textContent = cod;
-  document.getElementById("badgeDesc").textContent = desc;
+  document.getElementById("badgeCod").textContent=cod;
+  document.getElementById("badgeDesc").textContent=desc;
   checkValid();
 }
 
-function resetCodice() {
-  selCodice = null; selDesc = null;
+function resetCodice(){
+  selCodice=null;selDesc=null;capCorrente=null;
   document.getElementById("selettoreCodice").classList.remove("hidden");
   document.getElementById("badgeCodice").classList.add("hidden");
+  document.getElementById("vistaCapitoli").classList.remove("hidden");
+  document.getElementById("vistaDettaglio").classList.add("hidden");
+  buildCatGrid();
   checkValid();
 }
 
-function buildCarreggiata() {
-  const g = document.getElementById("gridCarreggiata");
-  g.innerHTML = "";
-  CARREGGIATE.forEach(c => {
-    const b = document.createElement("button");
-    b.className = "chip" + (carreggiata === c ? " active" : "");
-    b.textContent = c;
-    b.onclick = () => { carreggiata = c; buildCarreggiata(); checkValid(); };
+function buildCarreggiata(){
+  const g=document.getElementById("gridCarreggiata");g.innerHTML="";
+  CARREGGIATE.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="carr-btn"+(carreggiata===c?" active":"");
+    b.textContent=c;b.onclick=()=>{carreggiata=c;buildCarreggiata();checkValid();};
     g.appendChild(b);
   });
 }
 
-function setTipologia(t) {
-  tipologia = t;
-  document.getElementById("tipPuntuale").className = "toggle-btn" + (t === "Puntuale" ? " active" : "");
-  document.getElementById("tipDiffuso").className = "toggle-btn" + (t === "Diffuso" ? " active" : "");
+function setTipologia(t){
+  tipologia=t;
+  document.getElementById("tipP").className="tipo-btn"+(t==="Puntuale"?" active-p":"");
+  document.getElementById("tipD").className="tipo-btn"+(t==="Diffuso"?" active-d":"");
   checkValid();
 }
 
-function checkValid() {
-  const ok = document.getElementById("nomeFoto").value.trim() && selCodice && tipologia && carreggiata;
-  document.getElementById("btnSalva").disabled = !ok;
+function buildNomeFoto(){
+  const num = document.getElementById("nomeFoto").value.trim();
+  if(!num) return "";
+  return "IMG_" + num + ".JPG";
 }
 
-function salva() {
-  const riga = {
-    id: Date.now(),
-    nomeFoto: document.getElementById("nomeFoto").value.trim(),
-    codiceDifetto: selCodice, descDifetto: selDesc,
-    tipologia, carreggiata,
-    svincolo: document.getElementById("svincolo").value.trim(),
-    note: document.getElementById("note").value.trim()
+function checkValid(){
+  const ok=document.getElementById("nomeFoto").value.trim()!=""&&selCodice;
+  document.getElementById("btnSalva").disabled=!ok;
+}
+
+function salva(){
+  const riga={id:Date.now(),n:righe.length+1,
+    nomeFoto:buildNomeFoto(),
+    codiceDifetto:selCodice,descDifetto:selDesc,
+    tipologia,carreggiata,
+    svincolo:document.getElementById("svincolo").value.trim(),
+    note:document.getElementById("note").value.trim()
   };
   righe.push(riga);
-  localStorage.setItem("rilievo_v2", JSON.stringify(righe));
+  localStorage.setItem("rilievo_pa",JSON.stringify(righe));
   aggiornaContatore();
-
-  const btn = document.getElementById("btnSalva");
-  btn.textContent = "✓ SALVATO!"; btn.classList.add("saved"); btn.disabled = true;
-  setTimeout(() => { btn.textContent = "SALVA RECORD"; btn.classList.remove("saved"); }, 1300);
-
-  document.getElementById("nomeFoto").value = "";
-  document.getElementById("note").value = "";
-  selCodice = null; selDesc = null; selCat = null; tipologia = "";
-  document.getElementById("tipPuntuale").className = "toggle-btn";
-  document.getElementById("tipDiffuso").className = "toggle-btn";
-  document.getElementById("selettoreCodice").classList.remove("hidden");
-  document.getElementById("badgeCodice").classList.add("hidden");
-  document.getElementById("codiceListWrap").classList.add("hidden");
-  buildCatGrid(); checkValid();
+  const btn=document.getElementById("btnSalva");
+  btn.textContent="✓ Salvato!";btn.classList.add("saved");btn.disabled=true;
+  setTimeout(()=>{btn.textContent="Salva record";btn.classList.remove("saved");},1400);
+  // Auto-incrementa il numero foto
+  const numCorrente = document.getElementById("nomeFoto").value.trim();
+  if(numCorrente !== ""){
+    document.getElementById("nomeFoto").value = String(parseInt(numCorrente,10)+1).padStart(numCorrente.length,'0');
+  }
+  document.getElementById("note").value="";
+  tipologia="";
+  document.getElementById("tipP").className="tipo-btn";
+  document.getElementById("tipD").className="tipo-btn";
+  resetCodice();
+  checkValid();
+  document.querySelector('.content').scrollTo({top:0,behavior:'smooth'});
 }
 
-function elimina(id) {
-  righe = righe.filter(r => r.id !== id);
-  localStorage.setItem("rilievo_v2", JSON.stringify(righe));
-  aggiornaContatore(); renderLista();
+function elimina(id){
+  righe=righe.filter(r=>r.id!==id);
+  localStorage.setItem("rilievo_pa",JSON.stringify(righe));
+  aggiornaContatore();renderLista();
 }
 
-function svuotaTutto() {
-  if (!confirm("Eliminare tutti i record?")) return;
-  righe = []; localStorage.setItem("rilievo_v2", JSON.stringify(righe));
-  aggiornaContatore(); renderLista();
+let _idDaEliminare=null;
+
+function confermaElimina(id){
+  _idDaEliminare=id;
+  document.getElementById("dialogoElimina").classList.remove("hidden");
 }
 
-function aggiornaContatore() {
-  document.getElementById("countLabel").textContent = righe.length + " record salvati";
+function chiudiDialogoElimina(){
+  _idDaEliminare=null;
+  document.getElementById("dialogoElimina").classList.add("hidden");
 }
 
-function renderLista() {
-  const wrap = document.getElementById("listaRecords");
-  if (!righe.length) { wrap.innerHTML = '<div class="empty">Nessun record.<br>Inizia dall\'inserimento →</div>'; return; }
-  wrap.innerHTML = [...righe].reverse().map(r => `
+function confermaEliminaOk(){
+  if(_idDaEliminare==="all"){
+    righe=[];localStorage.setItem("rilievo_pa",JSON.stringify(righe));
+    aggiornaContatore();renderLista();
+  } else if(_idDaEliminare!==null){
+    elimina(_idDaEliminare);
+  }
+  chiudiDialogoElimina();
+}
+
+let idModifica=null;
+let modTipologia="";
+let modCarreggiata="";
+let modCodice=null;
+let modDesc=null;
+let modCapCorrente=null;
+
+function apriModale(id){
+  const r=righe.find(x=>x.id===id);
+  if(!r)return;
+  idModifica=id;
+  modTipologia=r.tipologia||"";
+  modCarreggiata=r.carreggiata||"";
+  modCodice=r.codiceDifetto||null;
+  modDesc=r.descDifetto||null;
+  modCapCorrente=null;
+  document.getElementById("modaleN").textContent="#"+String(r.n).padStart(2,"0");
+  document.getElementById("modNomeFoto").value=r.nomeFoto||"";
+  document.getElementById("modSvincolo").value=r.svincolo||"";
+  document.getElementById("modNote").value=r.note||"";
+  aggiornaModTipo();
+  buildModCarr();
+  modAggiornaBadge();
+  modBuildCatGrid();
+  document.getElementById("modaleModifica").classList.remove("hidden");
+}
+
+function chiudiModaleBtn(){
+  document.getElementById("modaleModifica").classList.add("hidden");
+  idModifica=null;
+}
+
+function chiudiModale(e){
+  if(e.target===document.getElementById("modaleModifica")) chiudiModaleBtn();
+}
+
+function setModTipo(t){
+  modTipologia=t;
+  aggiornaModTipo();
+}
+
+function aggiornaModTipo(){
+  document.getElementById("modTipP").className="carr-btn"+(modTipologia==="Puntuale"?" active":"");
+  document.getElementById("modTipD").className="carr-btn"+(modTipologia==="Diffuso"?" active":"");
+}
+
+function buildModCarr(){
+  const g=document.getElementById("modCarrGrid");g.innerHTML="";
+  ["Nord","Sud","Est","Ovest"].forEach(c=>{
+    const b=document.createElement("button");
+    b.className="carr-btn"+(modCarreggiata===c?" active":"");
+    b.textContent=c;
+    b.onclick=()=>{modCarreggiata=c;buildModCarr();};
+    g.appendChild(b);
+  });
+}
+
+function modAggiornaBadge(){
+  if(modCodice){
+    document.getElementById("modSelettore").classList.add("hidden");
+    document.getElementById("modBadgeCodice").classList.remove("hidden");
+    document.getElementById("modBadgeCod").textContent=modCodice;
+    document.getElementById("modBadgeDesc").textContent=modDesc||"";
+  } else {
+    document.getElementById("modSelettore").classList.remove("hidden");
+    document.getElementById("modBadgeCodice").classList.add("hidden");
+  }
+}
+
+function modResetCodice(){
+  modCodice=null; modDesc=null; modCapCorrente=null;
+  document.getElementById("modSelettore").classList.remove("hidden");
+  document.getElementById("modBadgeCodice").classList.add("hidden");
+  document.getElementById("modVistaCapitoli").classList.remove("hidden");
+  document.getElementById("modVistaDettaglio").classList.add("hidden");
+  modBuildCatGrid();
+}
+
+function modBuildCatGrid(){
+  const g=document.getElementById("modCatGrid");g.innerHTML="";
+  CAPITOLI.forEach(cap=>{
+    const b=document.createElement("button");
+    b.className="cat-btn";
+    b.innerHTML=`<span class="cn">${cap.k}</span><span class="cl">${cap.label}</span>`;
+    b.onclick=()=>modSelectCapitolo(cap);
+    g.appendChild(b);
+  });
+}
+
+function modSelectCapitolo(cap){
+  modCapCorrente=cap;
+  document.getElementById("modVistaCapitoli").classList.add("hidden");
+  document.getElementById("modVistaDettaglio").classList.remove("hidden");
+  document.getElementById("modDetTitle").textContent=cap.k+" — "+cap.label;
+  if(cap.sub){
+    document.getElementById("modVistaSub").classList.remove("hidden");
+    document.getElementById("modVistaDifetti").classList.add("hidden");
+    const sg=document.getElementById("modSubGrid");sg.innerHTML="";
+    cap.sub.forEach(sub=>{
+      const b=document.createElement("button");
+      b.className="cat-btn";
+      b.innerHTML=`<span class="cn">${sub.k}</span><span class="cl">${sub.label}</span>`;
+      b.onclick=()=>modSelectSub(sub);
+      sg.appendChild(b);
+    });
+  } else {
+    document.getElementById("modVistaSub").classList.add("hidden");
+    document.getElementById("modBtnBackSub").classList.add("hidden");
+    document.getElementById("modDetSubtitle").textContent="";
+    modMostraDifetti(cap.items);
+  }
+}
+
+function modSelectSub(sub){
+  document.getElementById("modVistaSub").classList.add("hidden");
+  document.getElementById("modBtnBackSub").classList.remove("hidden");
+  document.getElementById("modBtnBackSubLabel").textContent=modCapCorrente.label;
+  document.getElementById("modDetSubtitle").textContent=sub.k+" — "+sub.label;
+  modMostraDifetti(sub.items);
+}
+
+function modTornaSub(){ modSelectCapitolo(modCapCorrente); }
+
+function modTornaCapitoli(){
+  modCapCorrente=null;
+  document.getElementById("modVistaCapitoli").classList.remove("hidden");
+  document.getElementById("modVistaDettaglio").classList.add("hidden");
+}
+
+function modMostraDifetti(items){
+  document.getElementById("modVistaDifetti").classList.remove("hidden");
+  const list=document.getElementById("modCodiceList");list.innerHTML="";
+  items.forEach(([cod,desc])=>{
+    const d=document.createElement("div");d.className="ci";
+    d.innerHTML=`<span class="ci-cod">${cod}</span><span class="ci-desc">${desc}</span>`;
+    d.onclick=()=>{
+      modCodice=cod; modDesc=desc;
+      modAggiornaBadge();
+    };
+    list.appendChild(d);
+  });
+}
+
+function salvaModifica(){
+  if(!idModifica)return;
+  const idx=righe.findIndex(x=>x.id===idModifica);
+  if(idx===-1)return;
+  const nomeFoto=document.getElementById("modNomeFoto").value.trim();
+  if(nomeFoto) righe[idx].nomeFoto=nomeFoto;
+  righe[idx].svincolo=document.getElementById("modSvincolo").value.trim();
+  righe[idx].note=document.getElementById("modNote").value.trim();
+  if(modTipologia) righe[idx].tipologia=modTipologia;
+  if(modCarreggiata) righe[idx].carreggiata=modCarreggiata;
+  if(modCodice){ righe[idx].codiceDifetto=modCodice; righe[idx].descDifetto=modDesc; }
+  localStorage.setItem("rilievo_pa",JSON.stringify(righe));
+  chiudiModaleBtn();
+  renderLista();
+}
+
+function svuotaTutto(){
+  _idDaEliminare="all";
+  document.getElementById("dialogoElimina").classList.remove("hidden");
+}
+
+function aggiornaContatore(){
+  document.getElementById("countNum").textContent=righe.length;
+}
+
+function renderLista(){
+  const wrap=document.getElementById("listaRecords");
+  if(!righe.length){wrap.innerHTML='<div class="empty"><span class="empty-icon">\u{1F4CB}</span>Nessun record presente.<br>Inizia dall\'inserimento dati.</div>';return;}
+  wrap.innerHTML=[...righe].reverse().map(r=>`
     <div class="card">
-      <div class="card-top">
-        <span class="card-foto">${r.nomeFoto}</span>
-        <span class="card-codice">${r.codiceDifetto}</span>
-        <button class="btn-del" onclick="elimina(${r.id})">✕</button>
+      <div class="card-accent ${r.tipologia==='Puntuale'?'p':'d'}"></div>
+      <div class="card-body">
+        <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">
+          <div class="card-n">${String(r.n).padStart(2,'0')}</div>
+          <div class="card-main">
+            <div class="card-foto">${r.nomeFoto}</div>
+            <div class="card-cod">${r.codiceDifetto}</div>
+            <div class="card-desc">${r.descDifetto||''}</div>
+          </div>
+        </div>
+        <div class="tags" style="margin-bottom:10px">
+          <span class="tag ${r.tipologia==='Puntuale'?'tag-p':'tag-d'}">${r.tipologia}</span>
+          <span class="tag tag-g">${r.carreggiata}</span>
+          ${r.svincolo?`<span class="tag tag-km">${r.svincolo}</span>`:''}
+        </div>
+        ${r.note?`<div class="card-note" style="margin-bottom:10px">${r.note}</div>`:''}
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px;border-top:1px solid var(--grigio-bg);padding-top:10px">
+          <button class="btn-modifica" onclick="apriModale(${r.id})">✏ Modifica</button>
+          <button class="btn-elimina" onclick="confermaElimina(${r.id})">✕</button>
+        </div>
       </div>
-      <div class="tags">
-        <span class="tag ${r.tipologia==='Puntuale'?'tag-blue':'tag-orange'}">${r.tipologia}</span>
-        <span class="tag tag-gray">${r.carreggiata}</span>
-        ${r.svincolo?`<span class="tag tag-gray">${r.svincolo}</span>`:''}
-      </div>
-      <div class="card-desc">${r.descDifetto||''}</div>
-      ${r.note?`<div class="card-note">${r.note}</div>`:''}
     </div>`).join("");
 }
 
-function esportaExcel() {
-  if (!righe.length) { alert("Nessun dato da esportare."); return; }
-  const data = righe.map(r => ({
-    "Data": new Date(r.id).toLocaleString("it-IT"),
-    "Nome Foto": r.nomeFoto,
-    "Codice": r.codiceDifetto,
-    "Descrizione difetto": r.descDifetto,
-    "Tipologia": r.tipologia,
-    "Carreggiata": r.carreggiata,
-    "Svincolo": r.svincolo,
-    "Note": r.note
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  ws['!cols'] = [16,14,8,40,12,12,14,20].map(w=>({wch:w}));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Rilievo");
-  XLSX.writeFile(wb, `rilievo_${new Date().toISOString().slice(0,10)}.xlsx`);
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2500);
 }
 
-function switchTab(tab) {
-  const isForm = tab === "form";
-  document.getElementById("viewForm").classList.toggle("hidden", !isForm);
-  document.getElementById("viewLista").classList.toggle("hidden", isForm);
-  document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", i===(isForm?0:1)));
-  if (!isForm) renderLista();
+function esportaExcel(){
+  if(!righe.length){showToast("Nessun dato da esportare");return;}
+  const data=righe.map(r=>({"#":r.n,"Data/Ora":new Date(r.id).toLocaleString("it-IT"),"Nome Foto":r.nomeFoto,"Codice":r.codiceDifetto,"Descrizione difetto":r.descDifetto,"Tipologia":r.tipologia,"Carreggiata":r.carreggiata,"Svincolo":r.svincolo,"Note":r.note}));
+  const ws=XLSX.utils.json_to_sheet(data);
+  ws['!cols']=[5,18,14,8,42,12,12,14,20].map(w=>({wch:w}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Rilievo");
+  const nome = `rilievo_${new Date().toISOString().slice(0,10)}.xlsx`;
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob = new Blob([wbout], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+
+  // Prova Web Share API (iOS 15+ supporta condivisione file)
+  if(navigator.canShare && navigator.canShare({files:[new File([blob], nome)]})){
+    const file = new File([blob], nome, {type: blob.type});
+    navigator.share({files:[file], title:'Rilievo Difetti'})
+      .then(()=>showToast("✓ File condiviso!"))
+      .catch(err=>{ if(err.name!=='AbortError') fallbackDownload(blob,nome); });
+  } else {
+    fallbackDownload(blob, nome);
+  }
 }
 
-// Service Worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+
+function fallbackDownload(blob, nome){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(url); document.body.removeChild(a); }, 200);
+  showToast("✓ File scaricato in Download!");
 }
 
+function switchTab(tab){
+  const isForm=tab==='form';
+  document.getElementById("viewForm").classList.toggle("hidden",!isForm);
+  document.getElementById("viewLista").classList.toggle("hidden",isForm);
+  document.getElementById("navForm").classList.toggle("active",isForm);
+  document.getElementById("navLista").classList.toggle("active",!isForm);
+  if(!isForm) renderLista();
+}
+
+
+
+
+
+function parseCodiciTxt(testo){
+  // Estrae le righe tipo: '1.1': ('Capitolo', 'Sottocapitolo', 'Descrizione'),
+  const rigaRe = /['"]([\d.]+)['"]\s*:\s*\(\s*['"](.+?)['"]\s*,\s*['"](.+?)['"]\s*,\s*['"](.+?)['"]\s*\)/g;
+  const voci = [];
+  let m;
+  while((m = rigaRe.exec(testo)) !== null){
+    voci.push({ codice: m[1], capitolo: m[2], sottocapitolo: m[3], descrizione: m[4] });
+  }
+  if(voci.length === 0) return null;
+
+  // Raggruppa per capitolo
+  const mapCap = new Map();
+  voci.forEach(v => {
+    if(!mapCap.has(v.capitolo)) mapCap.set(v.capitolo, new Map());
+    const mapSub = mapCap.get(v.capitolo);
+    if(!mapSub.has(v.sottocapitolo)) mapSub.set(v.sottocapitolo, []);
+    mapSub.get(v.sottocapitolo).push([v.codice, v.descrizione]);
+  });
+
+  // Determina il numero capitolo dal primo codice
+  const capKeys = [];
+  voci.forEach(v => {
+    const numCap = v.codice.split('.')[0];
+    if(!capKeys.find(c => c.num === numCap && c.label === v.capitolo)){
+      capKeys.push({num: numCap, label: v.capitolo});
+    }
+  });
+
+  const risultato = [];
+  capKeys.forEach(ck => {
+    const mapSub = mapCap.get(ck.label);
+    if(!mapSub) return;
+    const subs = [...mapSub.entries()];
+    // Se sottocapitolo == capitolo, non serve livello intermedio
+    if(subs.length === 1 && subs[0][0] === ck.label){
+      risultato.push({ k: ck.num, label: ck.label, items: subs[0][1] });
+    } else {
+      // Verifica se ci sono veri sottocapitoli
+      const hasSub = subs.some(([sk]) => sk !== ck.label);
+      if(hasSub){
+        const subList = [];
+        subs.forEach(([sk, items]) => {
+          // Determina chiave sottocapitolo dal primo codice
+          const primoK = items[0][0].split('.').slice(0,2).join('.');
+          subList.push({ k: primoK, label: sk, items });
+        });
+        risultato.push({ k: ck.num, label: ck.label, sub: subList });
+      } else {
+        const allItems = [];
+        subs.forEach(([,items]) => items.forEach(i => allItems.push(i)));
+        risultato.push({ k: ck.num, label: ck.label, items: allItems });
+      }
+    }
+  });
+  return risultato;
+}
+
+
+
+
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 buildCatGrid();
 buildCarreggiata();
 aggiornaContatore();
+caricaCatalogoRemoto();
 </script>
 </body>
 </html>
